@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<runbook>
+	<header>
+	</header>
+	<sequence id="census">
+		<test src="census/languages" />
+
+	</sequence>
+
+</runbook>
