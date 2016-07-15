@@ -53,7 +53,7 @@ namespace RestUseCases.Rest
 			}
 			catch (Exception ex)
 			{
-				Terminal.WriteError(ex);
+				Terminal.WriteError("Invalid XML file:{0}\n{1}", fname, ex.Message);
 				return false;
 			}
 

@@ -27,12 +27,13 @@ namespace RestUseCases.Rest
 		internal JObject envariables;
 		internal Dictionary<string, string> headers = new Dictionary<string, string>();
 
-		public void Load(string rbook, string env)
+		public bool Load(string rbook, string env)
 		{
 			try
 			{
-				xbook = XDocument.Load(rbook);
-				xenv = XDocument.Load(env);
+				xbook = loadXmlFile(rbook);
+				xenv = loadXmlFile(env);
+				if (xbook == null || xenv == null) return false;
 				Environment = XTools.Attr(xenv.Root, "name");
 				envariables = new JObject();
 				foreach (XElement xvar in xenv.Root.Element("variables").Elements())
@@ -47,10 +48,30 @@ namespace RestUseCases.Rest
 				{
 					headers.Add(XTools.Attr(xhead, "id"), XTools.Attr(xhead, "value"));
 				}
+				return true;
 			}
 			catch (Exception ex)
 			{
 				Terminal.WriteError(ex);
+				return false;
+			}
+		}
+
+		private XDocument loadXmlFile(string fname)
+		{
+			try
+			{
+				if (!File.Exists(fname))
+				{
+					Console.WriteLine("File {0} does not exists");
+					return null;
+				}
+				return XDocument.Load(fname);
+
+			} catch (Exception ex)
+			{
+				Terminal.WriteError("Invalid XML format: {0}\n{1}", fname, ex.Message);
+				return null;
 			}
 		}
 

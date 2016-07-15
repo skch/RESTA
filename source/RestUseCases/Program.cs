@@ -19,11 +19,14 @@ namespace RestUseCases
 		{
 
 			Console.WriteLine("REST API Use Cases Testing Tool");
-			if (args.Length > 2)
+			string runBookFile = getParam(args, 1, "runbook.xml");
+			string environmentFile = getParam(args, 2, "environment.xml");
+
+			if (args.Length > 1)
 			{
 				var runBook = new TestRunBook();
-				runBook.Load(args[0], args[1]);
-				runBook.Execute();
+				if (runBook.Load(args[0], args[1]))
+					runBook.Execute();
 				Console.WriteLine("Completed");
 			}
 			else
@@ -34,6 +37,12 @@ namespace RestUseCases
 #if DEBUG
 			Console.ReadLine();
 #endif
+		}
+
+		private static string getParam(string[] plist, int pn, string value)
+		{
+			if (plist.Length > pn - 1) return plist[pn - 1];
+			return value;
 		}
 	}
 }
