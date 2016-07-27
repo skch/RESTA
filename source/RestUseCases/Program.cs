@@ -19,7 +19,7 @@ namespace RestUseCases
 		{
 
 			Console.WriteLine("REST API Use Cases Testing Tool");
-			if (args.Length > 2)
+			if (args.Length == 2)
 			{
 				var runBook = new TestRunBook();
 				runBook.Load(args[0], args[1]);
