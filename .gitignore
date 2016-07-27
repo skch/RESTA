@@ -1,0 +1,5 @@
+source/RestClient/bin/
+source/packages/
+source/RestUseCases/obj/
+source/RestUseCases/bin/
+source/RestClient/obj/

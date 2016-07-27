@@ -22,6 +22,7 @@ namespace RestUseCases.Rest
 	{
 		private XDocument xbook;
 		private XDocument xenv;
+		private string casesPath;
 		public XElement xreport;
 		public string Environment;
 		internal JObject envariables;
@@ -34,6 +35,9 @@ namespace RestUseCases.Rest
 				xbook = loadXmlFile(rbook);
 				xenv = loadXmlFile(env);
 				if (xbook == null || xenv == null) return false;
+				casesPath = Path.GetDirectoryName(rbook);
+				if(casesPath.Length > 0) casesPath += Path.DirectorySeparatorChar;
+
 				Environment = XTools.Attr(xenv.Root, "name");
 				envariables = new JObject();
 				foreach (XElement xvar in xenv.Root.Element("variables").Elements())
@@ -65,7 +69,7 @@ namespace RestUseCases.Rest
 				{
 					Console.WriteLine("File {0} does not exists");
 					return null;
-				}
+				}				
 				return XDocument.Load(fname);
 
 			} catch (Exception ex)
@@ -102,15 +106,15 @@ namespace RestUseCases.Rest
 		private void executeTest(XElement xtest)
 		{
 			string tid = xtest.Attribute("src").Value;
-			string fname = xtest.Attribute("src").Value + ".xml";
-			if (!File.Exists(fname))
+			string fname =  xtest.Attribute("src").Value + ".xml";
+			if (!File.Exists(casesPath + fname))
 			{
 				Terminal.WriteError("File not found: "+fname);
 				return;
 			}
 
 			var tc = new TestCase(this);
-			if (!tc.Load(fname)) return;
+			if (!tc.Load(casesPath + fname)) return;
 			tc.Execute(fname);
 		}
 
