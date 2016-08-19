@@ -60,9 +60,9 @@ namespace RestUseCases.Rest
 		}
 
 		// ==============================================================
-		public void Execute(string tid)
+		public int Execute(string tid)
 		{
-
+			int result = 0;
 			string rtype = xdoc.Root.Attribute("type").Value;
 			bool success = false;
 			switch (rtype)
@@ -79,7 +79,9 @@ namespace RestUseCases.Rest
 				book.xreport.Add(new XElement("test-case",
 					new XAttribute("id",tid), xrequest, xresponse
 					));
+				result = 1;
 			}
+			return result;
 		}
 
 		// ------------------------------------------------------

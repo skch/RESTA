@@ -79,16 +79,19 @@ namespace RestUseCases.Rest
 			}
 		}
 
-		public void Execute()
+		public int Execute()
 		{
+			int result = 0;
 			foreach (XElement xsq in xbook.Root.Elements("sequence"))
 			{
-				executeSequence(xsq);
+				result += executeSequence(xsq);
 			}
+			return result > 0 ? 1 : result;
 		}
 
-		private void executeSequence(XElement xsequence)
+		private int executeSequence(XElement xsequence)
 		{
+			int result = 0;
 			string id = XTools.Attr(xsequence, "id");
 			string reportFile = "report-" + id + ".xml";
 			xreport = new XElement("report", new XAttribute("id", id), new XAttribute("environment", Environment));
@@ -96,26 +99,26 @@ namespace RestUseCases.Rest
 			Console.WriteLine("\n\n# Sequence {0}\n", id);
 			foreach (XElement xtest in xsequence.Elements("test"))
 			{
-				executeTest(xtest);
+				result += executeTest(xtest);
 			}
 			var doc = new XDocument(xreport);
 			doc.Save(reportFile);
-
+			return result;
 		}
 
-		private void executeTest(XElement xtest)
+		private int executeTest(XElement xtest)
 		{
 			string tid = xtest.Attribute("src").Value;
 			string fname =  xtest.Attribute("src").Value + ".xml";
 			if (!File.Exists(casesPath + fname))
 			{
 				Terminal.WriteError("File not found: "+fname);
-				return;
+				return -1;
 			}
 
 			var tc = new TestCase(this);
-			if (!tc.Load(casesPath + fname)) return;
-			tc.Execute(fname);
+			if (!tc.Load(casesPath + fname)) return -1;
+			return tc.Execute(fname);
 		}
 
 		private void executeRestGet(string id, XElement xtest)
