@@ -26,6 +26,7 @@ namespace RestUseCases.Rest
 		public XElement xreport;
 		public string Environment;
 		internal JObject envariables;
+		internal JObject seqvariables;
 		internal Dictionary<string, string> headers = new Dictionary<string, string>();
 
 		public bool Load(string rbook, string env)
@@ -97,6 +98,12 @@ namespace RestUseCases.Rest
 			xreport = new XElement("report", new XAttribute("id", id), new XAttribute("environment", Environment));
 			if (File.Exists(reportFile)) File.Delete(reportFile);
 			Console.WriteLine("\n\n# Sequence {0}\n", id);
+			seqvariables = new JObject();
+			foreach(XElement seqvar in xsequence.Elements("var"))
+			{
+				seqvariables.Add(XTools.Attr(seqvar, "id"), string.Empty);
+			}
+
 			foreach (XElement xtest in xsequence.Elements("test"))
 			{
 				result += executeTest(xtest);

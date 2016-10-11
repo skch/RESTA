@@ -108,6 +108,7 @@ namespace RestUseCases.Rest
 				{
 					bool isValid = validateJson();
 					if (!isValid) return Terminal.WriteWarning("> FAILS: Invalid Response format");
+					SaveResult(root);
 				}
 				Console.WriteLine("> {0} OK", theResponse.Duration);
 				return true;
@@ -136,9 +137,13 @@ namespace RestUseCases.Rest
 				var input = new RestRequest();
 				input.Url = XTools.Attr(root, "url");
 				input.Url = Render.StringToString(input.Url, book.envariables);
-
+				JObject templates = book.envariables;
+				templates.Merge(book.seqvariables); 
 				input.Content = root.Element("data").Value;
-				input.Content = Render.StringToString(input.Content, book.envariables);
+				RenderContextBehaviour r = new RenderContextBehaviour();
+				r.HtmlEncoder = (x) => { return x; };
+				input.Content = Render.StringToString(input.Content, templates, r);
+
 				input.header = book.headers;
 
 				xrequest = input.AsXml(rtype);
@@ -155,6 +160,8 @@ namespace RestUseCases.Rest
 				{
 					bool isValid = validateJson();
 					if (!isValid) return Terminal.WriteWarning("> FAILS: Invalid Response format");
+					SaveResult(root);
+
 				}
 				Console.WriteLine("> {0} OK", theResponse.Duration);
 				return true;
@@ -207,7 +214,14 @@ namespace RestUseCases.Rest
 			}
 		}
 
-		
+		private void SaveResult(XElement root)
+		{
+			string seqVar = XTools.Attr(root.Element("result"), "saveToVar");
+			if (!string.IsNullOrEmpty(seqVar))
+			{
+				book.seqvariables[seqVar] = theResponse.CleanData;
+			}
+		}
 
 
 	}
