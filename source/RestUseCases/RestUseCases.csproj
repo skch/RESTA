@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rest\JSTools.cs" />
     <Compile Include="Rest\Terminal.cs" />
     <Compile Include="Rest\TestCase.cs" />
     <Compile Include="Rest\TestRunBook.cs" />

@@ -142,7 +142,7 @@ namespace RestUseCases.Rest
 				input.Content = root.Element("data").Value;
 				RenderContextBehaviour r = new RenderContextBehaviour();
 				r.HtmlEncoder = (x) => { return x; };
-				input.Content = Render.StringToString(input.Content, templates, r);
+				input.Content = Render.StringToString(input.Content, JSTools.objectToDict(templates), r);
 
 				input.header = book.headers;
 
