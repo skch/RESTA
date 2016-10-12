@@ -13,7 +13,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace nielsen.se.rest
+namespace skch.rest
 {
 	public class RestClient
 	{

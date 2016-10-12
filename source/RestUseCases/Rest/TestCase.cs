@@ -7,9 +7,9 @@ This is a free software (MIT license) */
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using nielsen.se.rest;
 using NLog;
 using Nustache.Core;
+using skch.rest;
 using System;
 using System.Collections.Generic;
 using System.IO;

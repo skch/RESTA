@@ -5,7 +5,7 @@
 This is a free software (MIT license) */
 #endregion
 using Newtonsoft.Json.Linq;
-using nielsen.se.rest;
+using skch.rest;
 using Nustache.Core;
 using System;
 using System.Collections.Generic;
