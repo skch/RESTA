@@ -29,9 +29,9 @@ namespace RestUseCases.Rest
 			Console.ResetColor();
 		}
 
-		public static bool WriteError(Exception ex)
+		public static bool WriteError(Exception ex, string msg = "")
 		{
-			writeErrorText(ex.Message);
+			writeErrorText(String.Format("{0} {1}", msg, ex.Message));
 			Console.WriteLine(ex.StackTrace);
 			return false;
 		}

@@ -33,6 +33,7 @@ namespace RestUseCases.Rest
 		{
 			try
 			{
+				if (!File.Exists(rbook)) return false;
 				xbook = loadXmlFile(rbook);
 				xenv = loadXmlFile(env);
 				if (xbook == null || xenv == null) return false;
@@ -41,15 +42,15 @@ namespace RestUseCases.Rest
 
 				Environment = XTools.Attr(xenv.Root, "name");
 				envariables = new JObject();
-				foreach (XElement xvar in xenv.Root.Element("variables").Elements())
+				var listVars = xenv.Root.Element("variables");
+				if (listVars != null)
+				foreach (XElement xvar in listVars.Elements())
 				{
 					envariables.Add(new JProperty(XTools.Attr(xvar, "id"), XTools.Attr(xvar, "value")));
 				}
-				foreach (XElement xhead in xenv.Root.Element("header-all").Elements())
-				{
-					headers.Add(XTools.Attr(xhead, "id"), XTools.Attr(xhead, "value"));
-				}
-				foreach (XElement xhead in xbook.Root.Element("header").Elements())
+				var listHeaders = xenv.Root.Element("header-all");
+				if (listHeaders != null)
+					foreach (XElement xhead in listHeaders.Elements())
 				{
 					headers.Add(XTools.Attr(xhead, "id"), XTools.Attr(xhead, "value"));
 				}
@@ -57,7 +58,7 @@ namespace RestUseCases.Rest
 			}
 			catch (Exception ex)
 			{
-				Terminal.WriteError(ex);
+				Terminal.WriteError(ex, "Cannot load runbook");
 				return false;
 			}
 		}

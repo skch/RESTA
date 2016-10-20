@@ -33,6 +33,7 @@ namespace RestUseCases.Rest
 		private XElement xrequest;
 		private XElement xresponse;
 		private RestResponse theResponse = null;
+		internal Dictionary<string, string> headers = new Dictionary<string, string>();
 
 		public TestCase(TestRunBook parent)
 		{
@@ -49,6 +50,12 @@ namespace RestUseCases.Rest
 				HttpCode = Convert.ToInt32(codes);
 				ContentType = XTools.Attr(xresult, "type");
 				schema = JSchema.Parse(xresult.Value);
+				var listHeaders = xdoc.Root.Element("header");
+				if (listHeaders != null)
+					foreach (XElement xhead in listHeaders.Elements())
+					{
+						headers.Add(XTools.Attr(xhead, "id"), XTools.Attr(xhead, "value"));
+					}
 				return true;
 			}
 			catch (Exception ex)
@@ -94,6 +101,7 @@ namespace RestUseCases.Rest
 				input.Url = XTools.Attr(xdoc.Root, "url");
 				input.Url = Render.StringToString(input.Url, book.envariables);
 				input.header = book.headers;
+				addHeaders(input.header, this.headers);
 
 				xrequest = input.AsXml(rtype);
 				var client = new RestClient();
@@ -120,6 +128,14 @@ namespace RestUseCases.Rest
 				return Terminal.WriteError("> FAILS: System Error");
 			}
 		}
+
+		private void addHeaders(Dictionary<string, string> target, Dictionary<string, string> source)
+		{
+			foreach (string key in source.Keys)
+			{
+				if (target.ContainsKey(key)) target[key] = source[key]; else target.Add(key, source[key]);
+			}
+		} 
 
 		// ------------------------------------------------------
 		private bool logError(string msg, params object[] data)
