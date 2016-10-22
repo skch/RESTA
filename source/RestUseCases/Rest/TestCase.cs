@@ -25,6 +25,7 @@ namespace RestUseCases.Rest
 		private static Logger logger = LogManager.GetCurrentClassLogger();
 
 		public TestRunBook book = null;
+		public string ResultVar = null;
 		private XDocument xdoc;
 		private int HttpCode;
 		private string ContentType;
@@ -142,7 +143,8 @@ namespace RestUseCases.Rest
 				input.Content = root.Element("data").Value;
 				RenderContextBehaviour r = new RenderContextBehaviour();
 				r.HtmlEncoder = (x) => { return x; };
-				input.Content = Render.StringToString(input.Content, JSTools.objectToDict(templates), r);
+				var t = JSTools.objectToDict(templates);
+				input.Content = Render.StringToString(input.Content, t, r);
 
 				input.header = book.headers;
 
@@ -215,14 +217,12 @@ namespace RestUseCases.Rest
 		}
 
 		private void SaveResult(XElement root)
-		{
-			string seqVar = XTools.Attr(root.Element("result"), "saveToVar");
-			if (!string.IsNullOrEmpty(seqVar))
+		{			
+			if (!string.IsNullOrEmpty(ResultVar))
 			{
-				book.seqvariables[seqVar] = theResponse.CleanData;
+				book.seqvariables[ResultVar] = JToken.Parse(theResponse.RawData);
 			}
+
 		}
-
-
 	}
 }

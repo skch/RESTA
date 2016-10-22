@@ -53,6 +53,7 @@ namespace RestUseCases.Rest
 				{
 					headers.Add(XTools.Attr(xhead, "id"), XTools.Attr(xhead, "value"));
 				}
+				seqvariables = new JObject();
 				return true;
 			}
 			catch (Exception ex)
@@ -98,12 +99,7 @@ namespace RestUseCases.Rest
 			xreport = new XElement("report", new XAttribute("id", id), new XAttribute("environment", Environment));
 			if (File.Exists(reportFile)) File.Delete(reportFile);
 			Console.WriteLine("\n\n# Sequence {0}\n", id);
-			seqvariables = new JObject();
-			foreach(XElement seqvar in xsequence.Elements("var"))
-			{
-				seqvariables.Add(XTools.Attr(seqvar, "id"), string.Empty);
-			}
-
+						
 			foreach (XElement xtest in xsequence.Elements("test"))
 			{
 				result += executeTest(xtest);
@@ -125,6 +121,9 @@ namespace RestUseCases.Rest
 
 			var tc = new TestCase(this);
 			if (!tc.Load(casesPath + fname)) return -1;
+			string svar = XTools.Attr(xtest, "out");
+			seqvariables.Add(svar, string.Empty);
+			tc.ResultVar = svar;
 			return tc.Execute(fname);
 		}
 
