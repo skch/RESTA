@@ -1,11 +1,17 @@
-﻿using Newtonsoft.Json.Linq;
+﻿#region Source code license
+/* RESTfull API Automated Testing tool
+ * Source:    https://github.com/skch/RESTA
+ * Author:    skch@usa.net
+This is a free software (MIT license) */
+#endregion
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RestUseCases.Rest
+namespace RestUseCases.Tools
 {
 	public class JSTools
 	{
@@ -30,6 +36,18 @@ namespace RestUseCases.Rest
 			return p.Value<bool>();
 		}
 
+		internal static JToken ParseSafe(string value)
+		{
+			try
+			{
+				var res = JToken.Parse(value);
+				return res;
+			} catch
+			{
+				return null;
+			}
+		}
+
 		public static long Long(JToken token, string name)
 		{
 			if (!(token is JObject)) return 0;
@@ -38,6 +56,25 @@ namespace RestUseCases.Rest
 			var p = item[name];
 			if (p == null) return 0;
 			return p.Value<long>();
+		}
+
+		public static void appendDict(JObject target, Dictionary<string, string> data)
+		{
+			if (target == null) return;
+			foreach (string key in data.Keys)
+			{
+				target.Add(new JProperty(key, data[key]));
+			}
+		}
+
+		public static void mergeObject(JObject target, JObject data)
+		{
+			if (target == null) return;
+			if (data == null) return;
+			foreach (var item in data)
+			{
+				target.Add(item.Key, item.Value);
+			}
 		}
 
 		public static Dictionary<string, string> objectToDict(JObject data)
