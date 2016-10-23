@@ -52,6 +52,12 @@ namespace RestUseCases
 					} 
 					var xtcase = XDocument.Load(status.CasesPath + fname);
 					var md = new TaskMetadata(xtest, xtcase.Root);
+					if (md.IsDisabled) continue;
+					if (!md.IsValid)
+					{
+						Console.WriteLine("Skip test case. Metadata are invalid: " + fname);
+						continue;
+					}
 					status.Operations.Add(md);
 				}
 				return status;
@@ -70,6 +76,8 @@ namespace RestUseCases
 			{
 				status.context = new JObject();
 				JSTools.appendDict(status.context, rbook.Book.Data);
+				var jcontext = status.metadata.Context;
+				if (jcontext != null) JSTools.mergeObject(status.context, jcontext);
 				return status;
 			}
 			catch (Exception ex)

@@ -41,6 +41,31 @@ namespace RestUseCases.Domain
 			}
 		}
 
+		public string ContextVariable
+		{
+			get
+			{
+				return XTools.Attr(xmlHeader, "save");
+			}
+		}
+
+		public bool IsDisabled
+		{
+			get
+			{
+				return XTools.Attr(xmlHeader, "disable") == "yes";
+			}
+		}
+
+		public bool IsValid
+		{
+			get
+			{
+				// TODO: Validate Task metadata
+				return true;
+			}
+		}
+
 		public string rtype
 		{
 			get { return XTools.Attr(xmlBody, "type"); }
@@ -86,10 +111,10 @@ namespace RestUseCases.Domain
 				var res = new Dictionary<string, string>();
 				var xheader = xmlBody.Element("header");
 				if (xheader == null) return res;
-				DTools.dictAppend(res, xheader, "id", "value");
+				CommonTools.dictAppend(res, xheader, "id", "value");
 				xheader = xmlHeader.Element("header");
 				if (xheader == null) return res;
-				DTools.dictAppend(res, xheader, "id", "value");
+				CommonTools.dictAppend(res, xheader, "id", "value");
 				return res;
 			}
 		}

@@ -36,6 +36,18 @@ namespace RestUseCases.Tools
 			return p.Value<bool>();
 		}
 
+		internal static JToken ParseSafe(string value)
+		{
+			try
+			{
+				var res = JToken.Parse(value);
+				return res;
+			} catch
+			{
+				return null;
+			}
+		}
+
 		public static long Long(JToken token, string name)
 		{
 			if (!(token is JObject)) return 0;
@@ -52,6 +64,16 @@ namespace RestUseCases.Tools
 			foreach (string key in data.Keys)
 			{
 				target.Add(new JProperty(key, data[key]));
+			}
+		}
+
+		public static void mergeObject(JObject target, JObject data)
+		{
+			if (target == null) return;
+			if (data == null) return;
+			foreach (var item in data)
+			{
+				target.Add(item.Key, item.Value);
 			}
 		}
 

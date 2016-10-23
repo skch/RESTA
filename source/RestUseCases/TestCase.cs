@@ -43,6 +43,7 @@ namespace RestUseCases
 			}
 			Console.Write(">");
 			status = validateResponse(status);
+			status = updateContext(status);
 			status = finalizeTestCase(status);
 			return status;
 		}
@@ -172,6 +173,25 @@ namespace RestUseCases
 				return status.setException(ex, "execute test");
 			}
 		}
+
+		// ----------------------------------------------------
+		private static SequenceStatus updateContext(SequenceStatus status)
+		{
+			if (status.HasErrors) return status;
+			try
+			{
+				string cname = status.currentCase.ContextVariable;
+				if (String.IsNullOrEmpty(cname)) return status; // no need
+				var jt = JToken.Parse(status.Response.RawData);
+				status.context.Add(new JProperty(cname, jt));
+				return status;
+			}
+			catch (Exception ex)
+			{
+				return status.setException(ex, "update context");
+			}
+		}
+
 
 		// ----------------------------------------------------
 		private static SequenceStatus finalizeTestCase(SequenceStatus status)
