@@ -83,7 +83,11 @@ namespace RestUseCases.Domain
 
 		public string Id
 		{
-			get { return XTools.Attr(xmlBody, "id"); }
+			get {
+				var path = XTools.Attr(xmlHeader, "src");
+				var parts = path.Split('/');
+				return parts[parts.Length - 1];
+			}
 		}
 
 		public int HttpCode

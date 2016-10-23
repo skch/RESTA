@@ -27,7 +27,7 @@ namespace RestUseCases
 			status = addCommonData(status, rbook);
 			status = runSequence(status);
 			status = saveContext(status);
-			displayResult(status);
+			saveReportFile(status);
 		}
 
 		// ----------------------------------------------------
@@ -133,7 +133,7 @@ namespace RestUseCases
 		}
 
 		// ----------------------------------------------------
-		private static void displayResult(SequenceStatus status)
+		private static void saveReportFile(SequenceStatus status)
 		{
 			string reportFile = "report-" + status.SequenceMd.Id + ".xml";
 			if (File.Exists(reportFile)) File.Delete(reportFile);

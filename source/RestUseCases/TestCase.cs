@@ -196,7 +196,7 @@ namespace RestUseCases
 		{
 			try
 			{
-				status.XmlSequenceReport.Add(status.XmlCaseReport);
+				if (status.Result > 0) status.XmlSequenceReport.Add(status.XmlCaseReport);
 				switch (status.Result)
 				{
 					case 0: Console.WriteLine(    "> {0} OK", status.RestOutput.Duration); break;
