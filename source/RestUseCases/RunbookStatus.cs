@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using RestUseCases.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,8 +20,7 @@ namespace RestUseCases
 		// Data
 		public string BookFileName;
 		public string EnvironmentName;
-		public XElement Env;
-		public XElement Book;
+		public RunbookMetadata Book;
 		public JObject envariables;
 		public Dictionary<string, string> listHeaders = new Dictionary<string, string>();
 

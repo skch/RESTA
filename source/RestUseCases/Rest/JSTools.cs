@@ -40,6 +40,15 @@ namespace RestUseCases.Rest
 			return p.Value<long>();
 		}
 
+		public static void appendDict(JObject target, Dictionary<string, string> data)
+		{
+			if (target == null) return;
+			foreach (string key in data.Keys)
+			{
+				target.Add(new JProperty(key, data[key]));
+			}
+		}
+
 		public static Dictionary<string, string> objectToDict(JObject data)
 		{
 			var res = new Dictionary<string, string>();

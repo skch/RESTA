@@ -5,6 +5,7 @@
 This is a free software (MIT license) */
 #endregion
 using Newtonsoft.Json.Linq;
+using RestUseCases.Domain;
 using RestUseCases.Rest;
 using System;
 using System.Collections.Generic;
@@ -23,8 +24,7 @@ namespace RestUseCases
 			Console.WriteLine("REST API Command Line Testing Tool");
 			var status = new RunbookStatus();
 			status = readCmdParameters(status, args);
-			status = loadEnvironmentConfig(status);
-			status = loadRunbookConfig(status);
+			status = loadMetadata(status);
 			status = validateRunbook(status);
 			status = executeRunbook(status);
 			displayResult(status);
@@ -51,39 +51,21 @@ namespace RestUseCases
 		}
 
 		// ----------------------------------------------------
-		private static RunbookStatus loadEnvironmentConfig(RunbookStatus status)
+		private static RunbookStatus loadMetadata(RunbookStatus status)
 		{
 			if (status.HasErrors) return status;
 			try
 			{
 				if (!File.Exists(status.EnvironmentName)) return status.setError("File does not exists: "+ status.EnvironmentName);
-				var doc = XDocument.Load(status.EnvironmentName);
-				status.Env = doc.Root;
-				status.EnvironmentName = XTools.Attr(status.Env, "name");
-				status.envariables = CommonTools.xmlToJson(status.Env.Element("variables"));
-				status.listHeaders = CommonTools.xmlToDict(status.Env.Element("header-all"));
-				return status;
-			}
-			catch (Exception ex)
-			{
-				return status.setException(ex, "load environment");
-			}
-		}
-
-		// ----------------------------------------------------
-		private static RunbookStatus loadRunbookConfig(RunbookStatus status)
-		{
-			if (status.HasErrors) return status;
-			try
-			{
+				var edoc = XDocument.Load(status.EnvironmentName);
 				if (!File.Exists(status.BookFileName)) return status.setError("File does not exists: " + status.BookFileName);
 				var doc = XDocument.Load(status.BookFileName);
-				status.Book = doc.Root;
+				status.Book = new RunbookMetadata(doc.Root, edoc.Root);
 				return status;
 			}
 			catch (Exception ex)
 			{
-				return status.setException(ex, "load runbook");
+				return status.setException(ex, "load metadata");
 			}
 		}
 
@@ -93,7 +75,8 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				if (status.Book.Elements("sequence") == null) return status.setError("Missing the sequence element");
+				string emsg = status.Book.Validate();
+				if (!String.IsNullOrEmpty(emsg)) return status.setError("Invalid test metadata: " + emsg);
 				return status;
 			}
 			catch (Exception ex)
@@ -108,7 +91,7 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				foreach (XElement xsq in status.Book.Elements("sequence"))
+				foreach (XElement xsq in status.Book.Sequence)
 				{
 					TestSequence.execute(status, xsq);
 				}

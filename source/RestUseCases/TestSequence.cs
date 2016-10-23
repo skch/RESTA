@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RestUseCases.Domain;
 using RestUseCases.Rest;
 using System;
 using System.Collections.Generic;
@@ -18,6 +20,7 @@ namespace RestUseCases
 			status = readSequenceXml(status, xsq);
 			status = addCommonData(status, rbook);
 			status = runSequence(status);
+			status = saveContext(status);
 			displayResult(status);
 		}
 
@@ -28,19 +31,7 @@ namespace RestUseCases
 			try
 			{
 				// Prepare sequence data template
-				status.CasesPath = "?";
-
-				// Create list of contexts
-				var xct = xsq.Elements("context");
-				if (xct != null) 
-					foreach (XElement xcontext in xct)
-					{
-						string key = XTools.Attr(xcontext, "id");
-						status.indexContext[key] = CommonTools.xmlToJson(xcontext.Elements("var"));
-					}
-
-				// Create default context
-				if (!status.indexContext.ContainsKey("default")) status.indexContext["default"] = new JObject();
+				status.metadata = new SequenceMetadata(xsq);
 
 				// Load all test cases to memory
 				foreach (XElement xtest in xsq.Elements("test"))
@@ -54,16 +45,14 @@ namespace RestUseCases
 						continue;
 					} 
 					var xtcase = XDocument.Load(status.CasesPath + fname);
-					xtcase.Add(new XAttribute("id", fname));
-					var contextAtr = xtest.Attribute("context");
-					if (contextAtr != null) xtcase.Add(contextAtr);
-					status.Operations.Add(xtcase.Root);
+					var md = new TaskMetadata(xtest, xtcase.Root);
+					status.Operations.Add(md);
 				}
 				return status;
 			}
 			catch (Exception ex)
 			{
-				return status.setException(ex, "run sequence");
+				return status.setException(ex, "read sequence metadata");
 			}
 		}
 
@@ -73,7 +62,8 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				status.EnvName = "";
+				status.context = new JObject();
+				JSTools.appendDict(status.context, rbook.Book.Data);
 				return status;
 			}
 			catch (Exception ex)
@@ -88,9 +78,9 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				status.XReport = new XElement("report", new XAttribute("id", status.Id), new XAttribute("environment", status.EnvName));
-				Console.WriteLine("\n\n# Sequence {0}\n", status.Id);
-				foreach (XElement xtest in status.Operations)
+				status.XReport = new XElement("report", new XAttribute("id", status.metadata.Id), new XAttribute("environment", status.EnvName));
+				Console.WriteLine("\n\n# Sequence {0}\n", status.metadata.Id);
+				foreach (TaskMetadata xtest in status.Operations)
 				{
 					status = TestCase.executeTest(status, xtest);
 					if (status.HasErrors && status.toBreakOnFail) return status;
@@ -105,9 +95,26 @@ namespace RestUseCases
 		}
 
 		// ----------------------------------------------------
+		private static SequenceStatus saveContext(SequenceStatus status)
+		{
+			if (status.HasErrors) return status;
+			try
+			{
+				if (!status.metadata.toSaveContext) return status;
+				string jcontext = status.context.ToString(Formatting.Indented);
+				status.XReport.Add(new XElement("context", jcontext));
+				return status;
+			}
+			catch (Exception ex)
+			{
+				return status.setException(ex, "save context");
+			}
+		}
+
+		// ----------------------------------------------------
 		private static void displayResult(SequenceStatus status)
 		{
-			string reportFile = "report-" + status.Id + ".xml";
+			string reportFile = "report-" + status.metadata.Id + ".xml";
 			if (File.Exists(reportFile)) File.Delete(reportFile);
 			var doc = new XDocument(status.XReport);
 			doc.Save(reportFile);
