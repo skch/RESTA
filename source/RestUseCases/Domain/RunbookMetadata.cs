@@ -1,4 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
+﻿#region Source code license
+/* RESTfull API Automated Testing tool
+ * Source:    https://github.com/skch/RESTA
+ * Author:    skch@usa.net
+This is a free software (MIT license) */
+#endregion
+using Newtonsoft.Json.Linq;
 using RestUseCases.Rest;
 using RestUseCases.Tools;
 using System;

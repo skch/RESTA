@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using NLog;
 using Nustache.Core;
+using RestUseCases.Tools;
 using skch.rest;
 using System;
 using System.Collections.Generic;

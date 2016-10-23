@@ -1,9 +1,14 @@
-﻿using RestUseCases.Rest;
+﻿#region Source code license
+/* RESTfull API Automated Testing tool
+ * Source:    https://github.com/skch/RESTA
+ * Author:    skch@usa.net
+This is a free software (MIT license) */
+#endregion
+using RestUseCases.Tools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace RestUseCases.Domain

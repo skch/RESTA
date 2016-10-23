@@ -1,4 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿#region Source code license
+/* RESTfull API Automated Testing tool
+ * Source:    https://github.com/skch/RESTA
+ * Author:    skch@usa.net
+This is a free software (MIT license) */
+#endregion
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using Nustache.Core;
