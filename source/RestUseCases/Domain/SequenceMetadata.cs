@@ -46,5 +46,12 @@ namespace RestUseCases.Domain
 		public bool toSaveContext {
 			get { return XTools.Attr(xmlBody, "showContext") == "yes"; }
 		}
+
+		public bool toBreakOnFail
+		{
+			get { return XTools.Attr(xmlBody, "break") == "yes"; }
+		}
+	
+
 	}
 }

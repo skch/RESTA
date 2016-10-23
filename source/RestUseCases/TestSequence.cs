@@ -37,7 +37,7 @@ namespace RestUseCases
 			try
 			{
 				// Prepare sequence data template
-				status.metadata = new SequenceMetadata(xsq);
+				status.SequenceMd = new SequenceMetadata(xsq);
 
 				// Load all test cases to memory
 				foreach (XElement xtest in xsq.Elements("test"))
@@ -74,10 +74,17 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				status.context = new JObject();
-				JSTools.appendDict(status.context, rbook.Book.Data);
-				var jcontext = status.metadata.Context;
-				if (jcontext != null) JSTools.mergeObject(status.context, jcontext);
+				status.EnvName = rbook.BookMd.EnvironmentName;
+
+				// Create context and load it with data
+				status.Context = new JObject();
+				JSTools.appendDict(status.Context, rbook.BookMd.Data);
+				var jcontext = status.SequenceMd.Context;
+				if (jcontext != null) JSTools.mergeObject(status.Context, jcontext);
+
+				// Build list of headers
+				CommonTools.dictMerge(status.headers, rbook.BookMd.Headers);
+
 				return status;
 			}
 			catch (Exception ex)
@@ -92,12 +99,12 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				status.XReport = new XElement("report", new XAttribute("id", status.metadata.Id), new XAttribute("environment", status.EnvName));
-				Console.WriteLine("\n\n# Sequence {0}\n", status.metadata.Id);
+				status.XmlSequenceReport = new XElement("report", new XAttribute("id", status.SequenceMd.Id), new XAttribute("environment", status.EnvName));
+				Console.WriteLine("\n\n# Sequence {0}\n", status.SequenceMd.Id);
 				foreach (TaskMetadata xtest in status.Operations)
 				{
 					status = TestCase.executeTest(status, xtest);
-					if (status.HasErrors && status.toBreakOnFail) return status;
+					if (status.HasErrors && status.SequenceMd.toBreakOnFail) return status;
 					status.reset(); // remove errors, but keep the context
 				}
 				return status;
@@ -114,9 +121,9 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				if (!status.metadata.toSaveContext) return status;
-				string jcontext = status.context.ToString(Formatting.Indented);
-				status.XReport.Add(new XElement("context", jcontext));
+				if (!status.SequenceMd.toSaveContext) return status;
+				string jcontext = status.Context.ToString(Formatting.Indented);
+				status.XmlSequenceReport.Add(new XElement("context", jcontext));
 				return status;
 			}
 			catch (Exception ex)
@@ -128,9 +135,9 @@ namespace RestUseCases
 		// ----------------------------------------------------
 		private static void displayResult(SequenceStatus status)
 		{
-			string reportFile = "report-" + status.metadata.Id + ".xml";
+			string reportFile = "report-" + status.SequenceMd.Id + ".xml";
 			if (File.Exists(reportFile)) File.Delete(reportFile);
-			var doc = new XDocument(status.XReport);
+			var doc = new XDocument(status.XmlSequenceReport);
 			doc.Save(reportFile);
 			Console.WriteLine();
 		}

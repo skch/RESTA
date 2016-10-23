@@ -65,7 +65,7 @@ namespace RestUseCases.Domain
 				{
 					CommonTools.dictAppend(res, xheaders, "id", "value");
 				}
-				xheaders = xmlBook.Element("header-all");
+				xheaders = xmlBook.Element("header");
 				if (xheaders != null)
 				{
 					CommonTools.dictAppend(res, xheaders, "id", "value");

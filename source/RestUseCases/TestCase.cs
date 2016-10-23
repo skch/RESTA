@@ -28,18 +28,18 @@ namespace RestUseCases
 		public static SequenceStatus executeTest(SequenceStatus status, TaskMetadata xtest)
 		{
 			if (status.HasErrors) return status;
-			status.currentCase = xtest;
-			Console.Write("Running test {0} >", status.currentCase.Id);
+			status.TestCaseMd = xtest;
+			Console.Write("Running test {0} >", status.TestCaseMd.Id);
 
 			status = prepareTestData(status, xtest);
-			Console.Write("{0}>", status.currentCase.rtype);
-			switch (status.currentCase.rtype)
+			Console.Write("{0}>", status.TestCaseMd.rtype);
+			switch (status.TestCaseMd.rtype)
 			{
 				case "GET": status = executeRestGet(status); break;
 				case "POST": status = executeRestPost(status); break;
 				// case "PUT": status = executeRestPost(status); break;
 				// case "DELETE": status = executeRestGet(status); break;
-				default: Terminal.WriteError("Unsupported test type: " + status.currentCase.rtype); break;
+				default: Terminal.WriteError("Unsupported test type: " + status.TestCaseMd.rtype); break;
 			}
 			Console.Write(">");
 			status = validateResponse(status);
@@ -55,22 +55,21 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				status.xTestReport = new XElement("test-case", new XAttribute("id", status.metadata.Id));
-				status.headers = new Dictionary<string, string>();
+				status.XmlCaseReport = new XElement("test-case", new XAttribute("id", status.SequenceMd.Id));
 
 				// Prepare data to render input
-				var listVariables = JSTools.objectToDict(status.context);
+				var listVariables = JSTools.objectToDict(status.Context);
 				// RenderContextBehaviour render = new RenderContextBehaviour();
 				// render.HtmlEncoder = (x) => { return x; };
-				status.input = new RestRequest();
+				status.RestInput = new RestRequest();
 
 				// Render request URL
-				status.input.Url = xtest.Url;
-				status.input.Url = Render.StringToString(status.input.Url, listVariables);
+				status.RestInput.Url = xtest.Url;
+				status.RestInput.Url = Render.StringToString(status.RestInput.Url, listVariables);
 
 				// Render content
-				status.input.Content = status.currentCase.Data;
-				status.input.Content = Render.StringToString(status.input.Content, listVariables);
+				status.RestInput.Content = status.TestCaseMd.Data;
+				status.RestInput.Content = Render.StringToString(status.RestInput.Content, listVariables);
 
 				// Build list of headers and render them
 				var headerTmp = new Dictionary<string, string>();
@@ -82,11 +81,11 @@ namespace RestUseCases
 					string txt = headerTmp[key];
 					headers.Add(key, Render.StringToString(txt, listVariables));
 				}
-				status.input.header = headers;
+				status.RestInput.header = headers;
 
 				// Add the request to the XML report
-				var xrequest = status.input.AsXml(status.currentCase.rtype);
-				status.xTestReport.Add(xrequest);
+				var xrequest = status.RestInput.AsXml(status.TestCaseMd.rtype);
+				status.XmlCaseReport.Add(xrequest);
 
 				return status;
 			}
@@ -103,7 +102,7 @@ namespace RestUseCases
 			try
 			{
 				var client = new RestClient();
-				status.Response = client.get(status.currentCase.rtype, status.input);
+				status.RestOutput = client.get(status.TestCaseMd.rtype, status.RestInput);
 				return status;
 			}
 			catch (Exception ex)
@@ -120,7 +119,7 @@ namespace RestUseCases
 			try
 			{
 				var client = new RestClient();
-				status.Response = client.post(status.currentCase.rtype, status.input);
+				status.RestOutput = client.post(status.TestCaseMd.rtype, status.RestInput);
 				return status;
 			}
 			catch (Exception ex)
@@ -136,26 +135,26 @@ namespace RestUseCases
 			try
 			{
 				// Add response to the test report
-				var xresponse = status.Response.AsXml();
-				status.xTestReport.Add(xresponse);
+				var xresponse = status.RestOutput.AsXml();
+				status.XmlCaseReport.Add(xresponse);
 
-				if (!status.Response.Success) return status.setError("HTTP Error: "+status.Response.Message);
-				if (status.Response.HttpCode != status.currentCase.HttpCode)
-					return status.setWarning(String.Format("returns code {0} instead of {1}", status.Response.HttpCode, status.currentCase.HttpCode));
+				if (!status.RestOutput.Success) return status.setError("HTTP Error: "+status.RestOutput.Message);
+				if (status.RestOutput.HttpCode != status.TestCaseMd.HttpCode)
+					return status.setWarning(String.Format("returns code {0} instead of {1}", status.RestOutput.HttpCode, status.TestCaseMd.HttpCode));
 
-				if (status.Response.ContentType != status.currentCase.ContentType)
-					return status.setWarning(String.Format("content type {0}, expected {1}", status.Response.ContentType, status.currentCase.ContentType));
+				if (status.RestOutput.ContentType != status.TestCaseMd.ContentType)
+					return status.setWarning(String.Format("content type {0}, expected {1}", status.RestOutput.ContentType, status.TestCaseMd.ContentType));
 
-				if (!status.Response.ContentType.Contains("json")) return status; // Only JSON response will be validated
+				if (!status.RestOutput.ContentType.Contains("json")) return status; // Only JSON response will be validated
 
-				var jt = JToken.Parse(status.Response.RawData);
-				status.Response.CleanData = jt.ToString(Formatting.Indented);
-				xresponse.Add(new XElement("content", status.Response.CleanData));
+				var jt = JToken.Parse(status.RestOutput.RawData);
+				status.RestOutput.CleanData = jt.ToString(Formatting.Indented);
+				xresponse.Add(new XElement("content", status.RestOutput.CleanData));
 				xresponse.Element("data").Remove();
 
-				var jresponse = JToken.Parse(status.Response.CleanData);
+				var jresponse = JToken.Parse(status.RestOutput.CleanData);
 				IList<ValidationError> schemaErrors;
-				bool valid = jresponse.IsValid(status.currentCase.schema, out schemaErrors);
+				bool valid = jresponse.IsValid(status.TestCaseMd.schema, out schemaErrors);
 				foreach (ValidationError er in schemaErrors)
 				{
 					xresponse.Add(new XElement("jerror",
@@ -180,10 +179,10 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				string cname = status.currentCase.ContextVariable;
+				string cname = status.TestCaseMd.ContextVariable;
 				if (String.IsNullOrEmpty(cname)) return status; // no need
-				var jt = JToken.Parse(status.Response.RawData);
-				status.context.Add(new JProperty(cname, jt));
+				var jt = JToken.Parse(status.RestOutput.RawData);
+				status.Context.Add(new JProperty(cname, jt));
 				return status;
 			}
 			catch (Exception ex)
@@ -198,10 +197,10 @@ namespace RestUseCases
 		{
 			try
 			{
-				status.XReport.Add(status.xTestReport);
+				status.XmlSequenceReport.Add(status.XmlCaseReport);
 				switch (status.Result)
 				{
-					case 0: Console.WriteLine(    "> {0} OK", status.Response.Duration); break;
+					case 0: Console.WriteLine(    "> {0} OK", status.RestOutput.Duration); break;
 					case 1: Terminal.WriteWarning("> FAILS: "+status.errorMessage); break;
 					case 2: Terminal.WriteError(  "> ERROR: " + status.errorMessage); break;
 					default: Terminal.WriteError( "> CRACH: " + status.errorMessage); break;

@@ -21,14 +21,13 @@ namespace RestUseCases
 		private string errorMessage = "";
 
 		public int Result = 0;
+		public int TestCount = 0;
 
 
 		// Data
 		public string BookFileName;
 		public string EnvironmentName;
-		public RunbookMetadata Book;
-		public JObject envariables;
-		public Dictionary<string, string> listHeaders = new Dictionary<string, string>();
+		public RunbookMetadata BookMd;
 
 		// ----------------------------------------------------
 		public bool HasErrors

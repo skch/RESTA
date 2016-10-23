@@ -25,21 +25,17 @@ namespace RestUseCases
 		public string EnvName = "";
 		public string CasesPath = "";
 
-		public bool toBreakOnFail = true;
-
-		public XElement XReport = null;
-		public SequenceMetadata metadata = null;
+		public SequenceMetadata SequenceMd = null;
 		public List<TaskMetadata> Operations = new List<TaskMetadata>();
-		public JObject context;
-		public Dictionary<string, string> listHeaders = new Dictionary<string, string>();
 		public Dictionary<string, string> headers = new Dictionary<string, string>();
-
+		public JObject Context;
+		public XElement XmlSequenceReport = null;
 
 		// Current Test Case
-		internal TaskMetadata currentCase = null;
-		internal XElement xTestReport = null;
-		public RestRequest input;
-		public RestResponse Response;
+		internal TaskMetadata TestCaseMd = null;
+		internal XElement XmlCaseReport = null;
+		public RestRequest RestInput;
+		public RestResponse RestOutput;
 
 		// ----------------------------------------------------
 		public bool HasErrors
