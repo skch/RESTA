@@ -4,8 +4,8 @@
  * Author:    skch@usa.net
 This is a free software (MIT license) */
 #endregion
+using Newtonsoft.Json;
 using Newtonsoft.Json.Schema;
-using RestUseCases.Rest;
 using RestUseCases.Tools;
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,7 @@ namespace RestUseCases.Domain
 		public XElement xresult;
 
 		public JSchema schema;
+		public string ErrorMessage = "";
 
 		public TaskMetadata(XElement xheader, XElement xbody)
 		{
@@ -31,7 +32,15 @@ namespace RestUseCases.Domain
 			xmlBody = xbody;
 			xresult = xmlBody.Element("result");
 			if (xresult == null) return;
-			schema = JSchema.Parse(xresult.Value);
+			try
+			{
+				schema = JSchema.Parse(xresult.Value);
+			}
+			catch (JsonReaderException ex)
+			{
+				schema = null;
+				ErrorMessage = String.Format("{0}: {1},{2}", ex.Message, ex.LineNumber, ex.LinePosition);
+			}
 		}
 
 		public string Url
@@ -62,6 +71,7 @@ namespace RestUseCases.Domain
 			get
 			{
 				// TODO: Validate Task metadata
+				if (schema == null) return false;
 				return true;
 			}
 		}

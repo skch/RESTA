@@ -67,8 +67,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tools\JSTools.cs" />
     <Compile Include="Tools\Terminal.cs" />
-    <Compile Include="Rest\TestCase.cs" />
-    <Compile Include="Rest\TestRunBook.cs" />
     <Compile Include="Tools\XTools.cs" />
     <Compile Include="RunbookStatus.cs" />
     <Compile Include="SequenceStatus.cs" />

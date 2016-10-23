@@ -55,7 +55,7 @@ namespace RestUseCases
 					if (md.IsDisabled) continue;
 					if (!md.IsValid)
 					{
-						Console.WriteLine("Skip test case. Metadata are invalid: " + fname);
+						Console.WriteLine("Skip test case: {1}. {0}", fname, md.ErrorMessage);
 						continue;
 					}
 					status.Operations.Add(md);

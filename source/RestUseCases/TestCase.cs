@@ -9,7 +9,6 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using Nustache.Core;
 using RestUseCases.Domain;
-using RestUseCases.Rest;
 using RestUseCases.Tools;
 using skch.rest;
 using System;
@@ -55,7 +54,7 @@ namespace RestUseCases
 			if (status.HasErrors) return status;
 			try
 			{
-				status.XmlCaseReport = new XElement("test-case", new XAttribute("id", status.SequenceMd.Id));
+				status.XmlCaseReport = new XElement("test-case", new XAttribute("id", status.TestCaseMd.Id));
 
 				// Prepare data to render input
 				var listVariables = JSTools.objectToDict(status.Context);

@@ -6,7 +6,6 @@ This is a free software (MIT license) */
 #endregion
 using Newtonsoft.Json.Linq;
 using RestUseCases.Domain;
-using RestUseCases.Rest;
 using skch.rest;
 using System;
 using System.Collections.Generic;

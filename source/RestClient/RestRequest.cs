@@ -25,6 +25,10 @@ namespace skch.rest
 			var xres = new XElement("request");
 			xres.Add(new XAttribute("url", Url));
 			xres.Add(new XAttribute("method", method));
+			if (Content != null)
+			{
+				xres.Add(new XElement("body", Content));
+			}
 			return xres;
 		}
 	}
