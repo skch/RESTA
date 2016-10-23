@@ -73,8 +73,8 @@ namespace RestUseCases
 
 				// Build list of headers and render them
 				var headerTmp = new Dictionary<string, string>();
-				DTools.dictMerge(headerTmp, status.headers);
-				DTools.dictMerge(headerTmp, xtest.Headers);
+				CommonTools.dictMerge(headerTmp, status.headers);
+				CommonTools.dictMerge(headerTmp, xtest.Headers);
 				var headers = new Dictionary<string, string>();
 				foreach (string key in headerTmp.Keys)
 				{

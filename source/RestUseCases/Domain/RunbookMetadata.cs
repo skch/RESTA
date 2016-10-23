@@ -39,10 +39,10 @@ namespace RestUseCases.Domain
 				var res = new Dictionary<string, string>();
 				var xvariables = xmlEnvironment.Element("variables");
 				if (xvariables != null)
-					DTools.dictAppend(res, xvariables, "id", "value");
+					CommonTools.dictAppend(res, xvariables, "id", "value");
 				xvariables = xmlBook.Element("variables");
 				if (xvariables != null)
-					DTools.dictAppend(res, xvariables, "id", "value");
+					CommonTools.dictAppend(res, xvariables, "id", "value");
 				return res;
 			}
 		}
@@ -63,12 +63,12 @@ namespace RestUseCases.Domain
 				var xheaders = xmlEnvironment.Element("header-all");
 				if (xheaders != null)
 				{
-					DTools.dictAppend(res, xheaders, "id", "value");
+					CommonTools.dictAppend(res, xheaders, "id", "value");
 				}
 				xheaders = xmlBook.Element("header-all");
 				if (xheaders != null)
 				{
-					DTools.dictAppend(res, xheaders, "id", "value");
+					CommonTools.dictAppend(res, xheaders, "id", "value");
 				}
 				return res;
 			}

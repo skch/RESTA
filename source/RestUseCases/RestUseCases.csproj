@@ -74,7 +74,6 @@
     <Compile Include="SequenceStatus.cs" />
     <Compile Include="TestCase.cs" />
     <Compile Include="TestSequence.cs" />
-    <Compile Include="Tools\DTools.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
