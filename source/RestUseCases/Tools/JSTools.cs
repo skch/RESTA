@@ -82,7 +82,14 @@ namespace RestUseCases.Tools
 			var res = new Dictionary<string, string>();
 			foreach (var item in data)
 			{
-				if (item.Value is JArray) throw new ApplicationException("Dictionary does not support arrays");
+				if (item.Value is JArray) {
+					var sublist = arrayToDict(item.Value as JArray);
+					foreach (string skey in sublist.Keys)
+					{
+						res.Add(item.Key + "/" + skey, sublist[skey]);
+					}
+					continue;
+				}
 				if (item.Value is JObject)
 				{
 					var sublist = objectToDict(item.Value as JObject);
@@ -96,6 +103,46 @@ namespace RestUseCases.Tools
 				res.Add(item.Key, item.Value.ToString());
 
 			}
+			return res;
+		}
+
+		private static Dictionary<string, string> propToDict(JProperty data)
+		{
+			var res = new Dictionary<string, string>();
+			res.Add(data.Name, data.ToString());
+			return res;
+		}
+
+		private static Dictionary<string, string> arrayToDict(JArray data)
+		{
+			JToken first = null;
+			JToken last = null;
+			foreach (var ae in data)
+			{
+				if (first == null) first = ae;
+				else last = ae;
+			}
+			var dfirst = tokenToDict(first);
+			var dlast = tokenToDict(last);
+
+			var res = new Dictionary<string, string>();
+			foreach (string skey in dfirst.Keys)
+			{
+				res.Add("[0]/" + skey, dfirst[skey]);
+			}
+			foreach (string skey in dlast.Keys)
+			{
+				res.Add("[last]/" + skey, dlast[skey]);
+			}
+			return res;
+		}
+
+		public static Dictionary<string, string> tokenToDict(JToken data)
+		{
+			if (data is JArray) return arrayToDict(data as JArray);
+			if (data is JObject) return objectToDict(data as JObject);
+			if (data is JProperty) return propToDict(data as JProperty);
+			var res = new Dictionary<string, string>();
 			return res;
 		}
 
