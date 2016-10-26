@@ -9,6 +9,7 @@ using RestUseCases.Domain;
 using skch.rest;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +36,15 @@ namespace RestUseCases
 		internal XElement XmlCaseReport = null;
 		public RestRequest RestInput;
 		public RestResponse RestOutput;
+
+		public SequenceStatus(string BookFileName)
+		{
+			string path = Path.GetDirectoryName(BookFileName);
+			if (path.Length > 0)
+			{
+				CasesPath = path + Path.DirectorySeparatorChar;
+			}
+		}
 
 		// ----------------------------------------------------
 		public bool HasErrors

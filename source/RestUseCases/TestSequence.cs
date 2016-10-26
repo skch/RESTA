@@ -22,7 +22,7 @@ namespace RestUseCases
 	{
 		public static void execute(RunbookStatus rbook, XElement xsq)
 		{
-			var status = new SequenceStatus();
+			var status = new SequenceStatus(rbook.BookFileName);
 			status = readSequenceXml(status, xsq);
 			status = addCommonData(status, rbook);
 			status = runSequence(status);
