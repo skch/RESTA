@@ -24,6 +24,8 @@ namespace RestUseCases
 		{
 			var status = new SequenceStatus(rbook.BookFileName);
 			status = readSequenceXml(status, xsq);
+			if (status.SequenceMd.IsDisabled) return;
+
 			status = addCommonData(status, rbook);
 			status = runSequence(status);
 			status = saveContext(status);
@@ -38,11 +40,11 @@ namespace RestUseCases
 			{
 				// Prepare sequence data template
 				status.SequenceMd = new SequenceMetadata(xsq);
+				if (status.SequenceMd.IsDisabled) return status;
 
 				// Load all test cases to memory
 				foreach (XElement xtest in xsq.Elements("test"))
 				{
-					string tid = XTools.Attr(xtest, "src");
 					string fname = xtest.Attribute("src").Value + ".xml";
 					if (!File.Exists(status.CasesPath + fname)) {
 						// return status.setError("File not found: " + fname);

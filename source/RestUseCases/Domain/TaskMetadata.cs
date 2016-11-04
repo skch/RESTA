@@ -39,7 +39,12 @@ namespace RestUseCases.Domain
 			catch (JsonReaderException ex)
 			{
 				schema = null;
-				ErrorMessage = String.Format("{0}: {1},{2}", ex.Message, ex.LineNumber, ex.LinePosition);
+				ErrorMessage = String.Format("Invalid JSON: {0}. {1},{2}", ex.Message, ex.LineNumber, ex.LinePosition);
+			}
+			catch (JSchemaReaderException ex)
+			{
+				schema = null;
+				ErrorMessage = String.Format("Invalid schema: {0}. {1},{2}", ex.Message, ex.LineNumber, ex.LinePosition);
 			}
 		}
 

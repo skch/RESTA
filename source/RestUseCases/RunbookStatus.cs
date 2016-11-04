@@ -18,7 +18,7 @@ namespace RestUseCases
 	public class RunbookStatus
 	{
 
-		private string errorMessage = "";
+		public string errorMessage = "";
 
 		public int Result = 0;
 		public int TestCount = 0;

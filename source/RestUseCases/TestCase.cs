@@ -65,6 +65,8 @@ namespace RestUseCases
 				// Render request URL
 				status.RestInput.Url = xtest.Url;
 				status.RestInput.Url = Render.StringToString(status.RestInput.Url, listVariables);
+				if (!status.RestInput.Url.Contains("://"))
+					return status.setError("Invalid service URL "+ status.RestInput.Url);
 
 				// Render content
 				status.RestInput.Content = status.TestCaseMd.Data;
@@ -200,7 +202,7 @@ namespace RestUseCases
 				switch (status.Result)
 				{
 					case 0: Console.WriteLine(    "> {0} OK", status.RestOutput.Duration); break;
-					case 1: Terminal.WriteWarning("> FAILS: "+status.errorMessage); break;
+					case 1: Terminal.WriteWarning("> FAILS: " + status.errorMessage); break;
 					case 2: Terminal.WriteError(  "> ERROR: " + status.errorMessage); break;
 					default: Terminal.WriteError( "> CRACH: " + status.errorMessage); break;
 				}
@@ -208,7 +210,7 @@ namespace RestUseCases
 			}
 			catch (Exception ex)
 			{
-				Terminal.WriteError("> CRACH: " + ex.Message);
+				Terminal.WriteError("> CRACH: !" + ex.Message);
 				return status.setException(ex, "display result");
 			}
 		}

@@ -112,6 +112,7 @@ namespace RestUseCases
 				case 1: Console.WriteLine("The test sequence is completed"); break;
 				default: Console.WriteLine("Completed {0} test sequences", status.TestCount); break;
 			}
+			if (!String.IsNullOrEmpty(status.errorMessage)) Console.WriteLine("Error: {0}", status.errorMessage);
 		}
 
 		

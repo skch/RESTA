@@ -31,6 +31,14 @@ namespace RestUseCases.Domain
 			get { return XTools.Attr(xmlBody, "id"); }
 		}
 
+		public bool IsDisabled
+		{
+			get
+			{
+				return XTools.Attr(xmlBody, "disable") == "yes";
+			}
+		}
+
 		public JObject Context
 		{
 			get {
