@@ -111,10 +111,13 @@ namespace Resta
 					
 				default:
 					Console.WriteLine("USAGE:");
-					Console.WriteLine("resta {options} RunbookFile");
+					Console.WriteLine("resta RunbookFile {options}");
 					Console.WriteLine("");
 					Console.WriteLine("Options:");
-					Console.WriteLine("-in:{path} - Define Path for input data");
+					Console.WriteLine(" -in:{path}    Define Path for input data");
+					Console.WriteLine(" -out:{path}   Define Path to output the results");
+					Console.WriteLine(" -sc:{path}    Define Path for schemas");
+					Console.WriteLine(" -keep         Save the result even when passed the test");
 					break;
 			}
 			
