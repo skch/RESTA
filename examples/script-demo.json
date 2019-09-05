@@ -1,0 +1,40 @@
+{
+	"id": "sampleapi",
+	"title": "Test Sample API",
+	"shared": {
+		"header": {
+			"Accept": "applicstion/json"
+		}
+		
+	},
+
+	"tasks": [
+		{
+			"id": "all",
+			"title": "Get All Employees",
+			"method": "GET",
+			"url": "{{url}}/v1/employees",
+			"assert": {
+				"response": 200,
+				"type": "text/html",
+				"schema": "elist"
+			},
+			"read": {
+				"locate": "[0].id",
+				"target": "employee"
+			}
+		},
+		{
+			"id": "single",
+			"title": "Get Single Employee",
+			"method": "GET",
+			"url": "{{url}}/v1/employee/{{employee}}",
+			"assert": {
+				"response": 200,
+				"type": "text/html",
+				"schema": "object"
+			}
+		}
+
+	]
+}

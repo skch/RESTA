@@ -1,0 +1,7 @@
+{
+  "title": "Sample environment",
+	"values": {
+		"url": "http://dummy.restapiexample.com/api",
+		"eid": "71884"
+	}
+}

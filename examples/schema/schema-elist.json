@@ -1,0 +1,15 @@
+{
+  "description": "Array of objects",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": { "id": "string" },
+      "version": { "employee_name": "string" }
+    },
+    "required": [
+      "id",
+      "employee_name"
+    ]
+  }
+}

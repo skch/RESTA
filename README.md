@@ -4,52 +4,79 @@ A simple command-line tool for automated testing of RESTfull APIs
 ## USAGE
 
 
-Prepare the environment XML file:
-```
-<environment name="...">
-  <variables>
-    <var id="base" value="http://api-url"  />
-    <var id="key" value="value"  />
-    ...
-  </variables>
-  <header-all>
-    <header id="key" value="value" />
-    <header id="key" value="value" />
-    ...
-  </header-all>
-</environment>
+Prepare the environment JSON file. The values property contains environment-specific values you can use in your scripts and data:
+```json
+{
+  "title": "Environment Name",
+  "values": {
+    "url": "http://dummy.restapiexample.com/api",
+    "key": "71884"
+  }
+}
 ```
 
-Prepare the one or several test cases XML files. You can use GET, POST, PUT, or DELETE request types:
-```
-<rest type="GET" url="{{base}}/path/parameters">
-  <data>
-    ~~~ message body in JSON format (optional) ~~~
-  </data>
-  <result code="200" type="application/json; charset=utf-8">
-    ~~~ JSON SCHEMA to validate response~~~
-  </result>
-</rest>
+Prepare the one or several test cases JSON files. You can use GET, POST, PUT, or DELETE request types:
+```json
+{
+  "id": "CASEID",
+  "title": "Test Case Title",
+  "shared": {
+    "header": {
+      "Accept": "applicstion/json"
+    }
+    
+  },
+
+  "tasks": [
+    {
+      "id": "task-id",
+      "title": "Task Title",
+      "method": "GET",
+      "url": "{{url}}/v1/employees",
+      "assert": {
+        "response": 200,
+        "type": "text/html",
+        "schema": "elist"
+      },
+      "read": {
+        "locate": "[0].id",
+        "target": "employee"
+      }
+    }
+  ]
+}
 ```
 
-Prepare the runbook XML file that refers one or several use cases:
-```
-<runbook>
-  <header>
-    <header id="key" value="value" />
-    ...
-  </header>
-  <sequence id="name">
-    <test src="case one" />
-    <test src="case two" />
-  </sequence>
-  ...
-</runbook>
+Prepare the runbook JSON file that refers one or several use cases:
+```json
+{
+  "title": "Runbook title",
+  "environment": "env-id",
+  "scripts": [
+    "case1", "case2", ...
+  ]
+}
 ```
 
 Execute the test script:
 ```
-rtest runbook.xml environment.xml
+resta path/runbook.json" -out:path/results -sc:path/schema -in:path/data -keep
 ```
 
-For each test sequence it will create file called _report-case.xml_ where the _case_ is the name of the test case.
+For each test case it will create file called `api-{case-id}-{task-id}.json`.
+
+Here are the command-line syntax:
+
+```
+resta runbook [options]
+
+OPTIONS:
+
+  -out:path     Specify the path to store output files
+
+  -in:path      Specify the path where to get the input files 
+
+  -sc:path      Specify the path where to get the schema files. Every schema file name should be `schema-{id}.json`
+
+  -keep         To keep the result file for successful tests.
+```
