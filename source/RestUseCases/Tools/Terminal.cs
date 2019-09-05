@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RestUseCases.Rest
+namespace RestUseCases.Tools
 {
 	public class Terminal
 	{
@@ -29,9 +29,9 @@ namespace RestUseCases.Rest
 			Console.ResetColor();
 		}
 
-		public static bool WriteError(Exception ex)
+		public static bool WriteError(Exception ex, string msg = "")
 		{
-			writeErrorText(ex.Message);
+			writeErrorText(String.Format("{0} {1}", msg, ex.Message));
 			Console.WriteLine(ex.StackTrace);
 			return false;
 		}

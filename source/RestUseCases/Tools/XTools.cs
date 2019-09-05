@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace RestUseCases.Rest
+namespace RestUseCases.Tools
 {
 	public class XTools
 	{
@@ -23,5 +23,16 @@ namespace RestUseCases.Rest
 			if (atr == null) return "";
 			return atr.Value;
 		}
+
+		public static int AttrInt(XElement parent, XName name, int def = 0)
+		{
+			if (parent == null) return def;
+			var atr = parent.Attribute(name);
+			if (atr == null) return def;
+			int res;
+			if (Int32.TryParse(atr.Value, out res)) return res;
+			return def;
+		}
+
 	}
 }

@@ -38,15 +38,15 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json.Schema, Version=2.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.Schema.2.0.3\lib\net45\Newtonsoft.Json.Schema.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.Schema.2.0.7\lib\net45\Newtonsoft.Json.Schema.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.3.5\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.3.10\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nustache.Core, Version=1.16.0.1, Culture=neutral, PublicKeyToken=efd6f3d8f76ecd9f, processorArchitecture=MSIL">
-      <HintPath>..\packages\Nustache.1.16.0.1\lib\net20\Nustache.Core.dll</HintPath>
+    <Reference Include="Nustache.Core, Version=1.16.0.4, Culture=neutral, PublicKeyToken=efd6f3d8f76ecd9f, processorArchitecture=MSIL">
+      <HintPath>..\packages\Nustache.1.16.0.4\lib\net20\Nustache.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -59,12 +59,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="Tools\CommonTools.cs" />
+    <Compile Include="Domain\RunbookMetadata.cs" />
+    <Compile Include="Domain\SequenceMetadata.cs" />
+    <Compile Include="Domain\TaskMetadata.cs" />
+    <Compile Include="TestRunbook.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Rest\Terminal.cs" />
-    <Compile Include="Rest\TestCase.cs" />
-    <Compile Include="Rest\TestRunBook.cs" />
-    <Compile Include="Rest\XTools.cs" />
+    <Compile Include="Tools\JSTools.cs" />
+    <Compile Include="Tools\Terminal.cs" />
+    <Compile Include="Tools\XTools.cs" />
+    <Compile Include="RunbookStatus.cs" />
+    <Compile Include="SequenceStatus.cs" />
+    <Compile Include="TestCase.cs" />
+    <Compile Include="TestSequence.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace nielsen.se.rest
+namespace skch.rest
 {
 	public class RestRequest
 	{
@@ -25,6 +25,10 @@ namespace nielsen.se.rest
 			var xres = new XElement("request");
 			xres.Add(new XAttribute("url", Url));
 			xres.Add(new XAttribute("method", method));
+			if (Content != null)
+			{
+				xres.Add(new XElement("body", Content));
+			}
 			return xres;
 		}
 	}

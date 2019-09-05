@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace nielsen.se.rest
+namespace skch.rest
 {
 	public enum JsonType { JsonNone, JsonEmpty, JsonValue, JsonObject, JsonArray }
 

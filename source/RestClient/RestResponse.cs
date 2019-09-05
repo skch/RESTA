@@ -15,7 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace nielsen.se.rest
+namespace skch.rest
 {
 	public class RestResponse
 	{
