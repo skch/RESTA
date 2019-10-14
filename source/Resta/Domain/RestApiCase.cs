@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.IO;
+using System.Net;
 using HandlebarsDotNet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -94,6 +95,9 @@ namespace Resta.Domain
 			Console.Write("  - {0}:", task.title);
 			var client = new RestClient(path) {Timeout = 80000 };
 			var request = prepareRequest(res, env, script, task);
+			
+			ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+			
 			var response = getResponse(res, client, request);
 			updateResult(res, response);
 			return res;
@@ -109,7 +113,7 @@ namespace Resta.Domain
 			{
 				if (!Enum.TryParse(task.method, out RestSharp.Method method))
 				{
-					res.errors.Add("Invalid method " + task.method);
+					res.warnings.Add("Invalid method " + task.method);
 					return null;
 				}
 				var request = new RestRequest(method);
@@ -121,7 +125,7 @@ namespace Resta.Domain
 			}
 			catch (Exception ex)
 			{
-				res.errors.Add("REST Client: "+ex.Message);
+				res.warnings.Add("REST Client: "+ex.Message);
 				return null;
 			}
 			
@@ -142,7 +146,7 @@ namespace Resta.Domain
 			res.duration = (long)fd.TotalMilliseconds;
 			if (response.ErrorException != null)
 			{
-				res.errors.Add(response.ErrorException.Message);
+				res.warnings.Add(response.ErrorException.Message);
 			}
 			return response;
 			//client.ExecuteAsync(request, response1 => {
@@ -183,7 +187,7 @@ namespace Resta.Domain
 			}
 			catch (Exception ex)
 			{
-				res.errors.Add("Cannot read request body "+fname+". "+ex.Message);
+				res.warnings.Add("Cannot read request body "+fname+". "+ex.Message);
 				return null;
 			}
 		}
@@ -219,7 +223,7 @@ namespace Resta.Domain
 			}
 			catch (Exception ex)
 			{
-				res.errors.Add("Exception: "+ex.Message);
+				res.warnings.Add("Exception: "+ex.Message);
 			}
 
 		}
@@ -266,7 +270,7 @@ namespace Resta.Domain
 					}
 				}
 
-				if (task.read != null && result.errors.Count == 0)
+				if (task.read != null && result.warnings.Count == 0)
 					readApiResponse(context, env, result, task.read);
 
 				return true;
@@ -281,12 +285,12 @@ namespace Resta.Domain
 		//--------------------------------------------------
 		private void validateAssert<T>(T expect, T actual, string msg, ApiCallResult res) where T : IComparable
 		{
-			if (res.errors.Count > 0) return;
+			if (res.warnings.Count > 0) return;
 			if (expect == null) return;
 			
 
 			if (expect.CompareTo(actual) != 0) 
-				res.errors.Add($"{msg}: {actual}. Expected {expect}");
+				res.warnings.Add($"{msg}: {actual}. Expected {expect}");
 		}
 
 		
@@ -316,7 +320,7 @@ namespace Resta.Domain
 		//--------------------------------------------------
 		private void validateJsonSchema(string fschema, ApiCallResult res)
 		{
-			if (res.errors.Count > 0) return;
+			if (res.warnings.Count > 0) return;
 			try
 			{
 				string schemaJson = File.ReadAllText(fschema);
@@ -329,13 +333,13 @@ namespace Resta.Domain
 				{
 					foreach (var msg in messages)
 					{
-						res.errors.Add($"Schema: {msg}");
+						res.warnings.Add($"Schema: {msg}");
 					}
 				}
 			}
 			catch (Exception ex)
 			{
-				res.errors.Add($"Schema fatal: {ex.Message}");
+				res.warnings.Add($"Schema fatal: {ex.Message}");
 			}
 				
 		}
@@ -365,11 +369,11 @@ namespace Resta.Domain
 			{
 				FluentConsole
 					.Text(" ")
-					.With(c => result.errors.Count == 0 ? c.Green : c.Yellow)
-					.Line(result.errors.Count == 0 ? "passed" : "failed");
+					.With(c => result.warnings.Count == 0 ? c.Green : c.Yellow)
+					.Line(result.warnings.Count == 0 ? "passed" : "failed");
 				//if (result.errors.Count == 0) Console.WriteLine(" completed");
 				//else Console.WriteLine(" failed");
-				if (!ToSaveSuccess && result.errors.Count == 0) return true;
+				if (!ToSaveSuccess && result.warnings.Count == 0) return true;
 				string fileApiResponse = Path.Combine(OutputPath, fname);
 				string jsonApiResponse = JsonConvert.SerializeObject(result, Formatting.Indented);
 				File.WriteAllText(fileApiResponse, jsonApiResponse);

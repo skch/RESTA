@@ -18,7 +18,7 @@ namespace Resta.Model
 		public long duration;
 		public int htmlcode;
 		public string type;
-		public List<string> errors = new List<string>();
+		public List<string> warnings = new List<string>();
 		public object response;
 		public string raw;
 		public object input;

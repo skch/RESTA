@@ -24,6 +24,7 @@ namespace Resta.Domain
 
 			if (string.IsNullOrEmpty(ename)) ename = book.environment;
 			var env = loadEnvironment(context, opt.ScriptPath, ename);
+			if (context.HasErrors) return false;
 
 			var tcase = new RestApiCase();
 			tcase.OutputPath = opt.OutputPath;
