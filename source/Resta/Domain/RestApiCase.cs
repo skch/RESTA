@@ -121,6 +121,7 @@ namespace Resta.Domain
 				if (task.header != null) addRequestHeader(env, request, task.header);
 				res.input = null;
 				if (task.body != null) res.input = addRequestBody(res, env, request, task.body);
+				
 				return request;
 			}
 			catch (Exception ex)
@@ -176,14 +177,35 @@ namespace Resta.Domain
 		{
 			try
 			{
-				string fullname = Path.Combine(InputPath, fname + ".json");
+				string fullname = Path.Combine(InputPath, fname);
+				if (!File.Exists(fullname))
+					fullname = Path.Combine(InputPath, fname + ".json");
+				if (!File.Exists(fullname))
+				{
+					res.warnings.Add("Cannot find body file: "+fullname);
+					return null;
+				}
 				string json = mustache(File.ReadAllText(fullname), env);
-				var data = JsonConvert.DeserializeObject(json);
-				request.RequestFormat = DataFormat.Json;
+				string ext = Path.GetExtension(fullname).ToLower();
+				switch (ext)
+				{
+					case ".json":
+						var data = JsonConvert.DeserializeObject(json);
+						request.RequestFormat = DataFormat.Json;
+						request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
+						return data;
+						
+					case ".xml":
+						request.RequestFormat = DataFormat.Xml;
+						request.AddParameter("application/xml; charset=utf-8", json, ParameterType.RequestBody);
+						return new XmlInput(json);
+						
+					default:
+						res.warnings.Add("Unsupported type: "+ext);
+						return null;
+				}
+				
 				//request.AddJsonBody(data);
-				request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
-
-				return data;
 			}
 			catch (Exception ex)
 			{
