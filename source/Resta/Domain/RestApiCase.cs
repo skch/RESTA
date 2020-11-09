@@ -276,7 +276,20 @@ namespace Resta.Domain
 			{
 				if (task.assert != null)
 				{
-					validateAssert(task.assert.response, result.htmlcode, "Invalid response code", result);
+					if (task.assert.response != null)
+					{
+						int arcode = task.assert.response ?? default(int);
+						validateAssert(arcode, result.htmlcode, "Invalid response code", result);
+					}
+					if (task.assert.responses != null)
+					{
+						bool match = false;
+						foreach (var rcode in task.assert.responses)
+						{
+							if (result.htmlcode == rcode) { match = true; break; }
+						}
+						if (!match) result.warnings.Add($"Invalid response code: {result.htmlcode}.");
+					}
 					if (task.assert.type != null)
 						validateAssert(task.assert.type, result.type, "Invalid content type", result);
 					if (result.response != null)

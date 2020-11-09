@@ -80,3 +80,26 @@ OPTIONS:
 
   -keep         To keep the result file for successful tests.
 ```
+
+
+
+Another option for task:
+
+```json
+{
+  "id": "task-id",
+  "title": "Task Title",
+  "method": "GET",
+  "url": "{{url}}/v1/employees",
+  "assert": {
+    "responses": [200, 206],
+    "type": "text/html",
+    "schema": "elist"
+  },
+  "read": {
+    "locate": "[0].id",
+    "target": "employee"
+  }
+}
+```
+
