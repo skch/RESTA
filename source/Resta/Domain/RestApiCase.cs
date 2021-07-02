@@ -330,19 +330,22 @@ namespace Resta.Domain
 
 		
 		//--------------------------------------------------
-		private bool readApiResponse(ProcessContext context, RestEnvironment env, ApiCallResult res, ApiRead read)
+		private bool readApiResponse(ProcessContext context, RestEnvironment env, ApiCallResult res, IEnumerable<ApiRead> readin)
 		{
 			if (context.HasErrors) return false;
 			try
 			{
 				var token = (JToken) res.response;
-				var element = (string)token.SelectToken(read.locate);
-				if (string.IsNullOrEmpty(element)) element = "~";
-				if (env.values.ContainsKey(read.target)) 
-					env.values[read.target] = element; 
-				else 
-					env.values.Add(read.target, element);
-				Console.Write(", {0}={1} ", read.target, element);
+				foreach (var read in readin)
+				{
+					var element = (string)token.SelectToken(read.locate);
+					if (string.IsNullOrEmpty(element)) element = "~";
+					if (env.values.ContainsKey(read.target)) 
+						env.values[read.target] = element; 
+					else 
+						env.values.Add(read.target, element);
+					Console.Write(", {0}={1} ", read.target, element);
+				}
 				return true;
 
 			}

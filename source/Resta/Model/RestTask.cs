@@ -20,6 +20,6 @@ namespace Resta.Model
 		public string body;
 		public Dictionary<string, string> header;
 		public ApiAssert assert;
-		public ApiRead read;
+		public ApiRead[] read;
 	}
 }
