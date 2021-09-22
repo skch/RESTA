@@ -15,11 +15,12 @@ namespace Resta
 {
 	class Program
 	{
+	
+		static string AppVersion = "1.1.09";
 		static void Main(string[] args)
 		{
 			FluentConsole
-				.Text("REST API").
-				Magenta.Line(" Automated Testing");
+				.Text("REST API Automated Testing").Cyan.Line(" v"+AppVersion);
 			//Console.WriteLine("REST API Automated Testing");
 			var context = new ProcessContext();
 			var cparams = getProcessParams(context, args);

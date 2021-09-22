@@ -1,15 +1,48 @@
 {
-  "description": "Array of objects",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "name": { "id": "string" },
-      "version": { "employee_name": "string" }
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string"
     },
-    "required": [
-      "id",
-      "employee_name"
-    ]
-  }
+    "data": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "employee_name": {
+              "type": "string"
+            },
+            "employee_salary": {
+              "type": "integer"
+            },
+            "employee_age": {
+              "type": "integer"
+            },
+            "profile_image": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "employee_name",
+            "employee_salary",
+            "employee_age",
+            "profile_image"
+          ]
+        }
+      ]
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "status",
+    "data",
+    "message"
+  ]
 }

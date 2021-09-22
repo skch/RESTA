@@ -15,6 +15,7 @@ namespace Resta.Model
 		public string taskid;
 		public string url;
 		public string time;
+		public string security;
 		public long duration;
 		public int htmlcode;
 		public string type;

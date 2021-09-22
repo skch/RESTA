@@ -16,6 +16,7 @@ namespace Resta.Model
 		public string title;
 		public string description;
 		public string method;
+		public CertificateSettings x509; 
 		public string url;
 		public string body;
 		public Dictionary<string, string> header;

@@ -16,13 +16,13 @@
 			"url": "{{url}}/v1/employees",
 			"assert": {
 				"response": 200,
-				"type": "text/html",
+				"type": "application/json",
 				"schema": "elist"
 			},
-			"read": {
-				"locate": "[0].id",
+			"read": [{
+				"locate": "data[0].id",
 				"target": "employee"
-			}
+			}]
 		},
 		{
 			"id": "single",
@@ -31,7 +31,7 @@
 			"url": "{{url}}/v1/employee/{{employee}}",
 			"assert": {
 				"response": 200,
-				"type": "text/html",
+				"type": "application/json",
 				"schema": "object"
 			}
 		}

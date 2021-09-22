@@ -7,9 +7,9 @@ This is a free software (MIT license) */
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using HandlebarsDotNet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -98,6 +98,20 @@ namespace Resta.Domain
 			
 			ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 			
+			if (task.x509 != null)
+			{
+				Console.Write("🔑");
+				if (string.IsNullOrEmpty(task.x509.file)) return context.SetError<ApiCallResult>(null, "Certificate file is missing");
+				var certFile = Path.Combine(InputPath, task.x509.file);
+				if (!File.Exists(certFile)) return context.SetError<ApiCallResult>(null, "Certificate file does not exist: "+certFile);
+				X509Certificate2 certificate = new X509Certificate2(certFile, task.x509.password);
+				client.ClientCertificates = new X509CertificateCollection() { certificate };
+				client.Proxy = new WebProxy();		
+				//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;		
+				ServicePointManager.ServerCertificateValidationCallback += (s, cert, chain, sslPolicyErrors) => true;
+				res.security = task.x509.file;
+			}
+				
 			var response = getResponse(res, client, request);
 			updateResult(res, response);
 			return res;
@@ -121,6 +135,13 @@ namespace Resta.Domain
 				if (task.header != null) addRequestHeader(env, request, task.header);
 				res.input = null;
 				if (task.body != null) res.input = addRequestBody(res, env, request, task.body);
+				
+				
+				ServicePointManager.Expect100Continue = true;
+				ServicePointManager.DefaultConnectionLimit = 9999;
+				//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
+				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+
 				
 				return request;
 			}
@@ -338,7 +359,7 @@ namespace Resta.Domain
 				var token = (JToken) res.response;
 				foreach (var read in readin)
 				{
-					var element = (string)token.SelectToken(read.locate);
+					var element = locateByPath(context, token, read.locate);
 					if (string.IsNullOrEmpty(element)) element = "~";
 					if (env.values.ContainsKey(read.target)) 
 						env.values[read.target] = element; 
@@ -352,6 +373,19 @@ namespace Resta.Domain
 			catch (Exception ex)
 			{
 				return context.SetError(false, "Read API response", ex);
+			}
+		}
+
+		private string locateByPath(ProcessContext context, JToken token, string query)
+		{
+			if (context.HasErrors) return "~";
+			try
+			{
+				var element = token.SelectToken(query);
+				return (string)element;
+			} catch (Exception ex)
+			{
+				return context.SetError("~~", "Cannot execute query "+query+". "+ex.Message);
 			}
 		}
 

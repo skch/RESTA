@@ -15,7 +15,8 @@ namespace Resta.Domain
 		private string errorMessage;
 		private string trace = "";
 		
-		public string ErrorMessage => errorMessage + trace;
+		public string ErrorMessage => errorMessage;
+		public string ErrorDebug => errorMessage + trace;
 		public bool HasErrors => !string.IsNullOrEmpty(errorMessage);
 
 		public T SetError<T>(T value, string msg)
