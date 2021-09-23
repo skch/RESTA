@@ -15,6 +15,7 @@ namespace Resta.Model
 		public bool disabled = false;
 		public string title;
 		public string description;
+		public int? timeout;
 		public string method;
 		public CertificateSettings x509; 
 		public string url;

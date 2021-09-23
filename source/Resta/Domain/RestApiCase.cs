@@ -135,11 +135,12 @@ namespace Resta.Domain
 				if (task.header != null) addRequestHeader(env, request, task.header);
 				res.input = null;
 				if (task.body != null) res.input = addRequestBody(res, env, request, task.body);
-				
+				request.Timeout = 5000;
+				if (script.shared.timeout != null) request.Timeout = (int)script.shared.timeout;
+				if (task.timeout != null) request.Timeout = (int)task.timeout;
 				
 				ServicePointManager.Expect100Continue = true;
 				ServicePointManager.DefaultConnectionLimit = 9999;
-				//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
 				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
 				
@@ -151,11 +152,6 @@ namespace Resta.Domain
 				return null;
 			}
 			
-			//request.AddParameter("name", "value"); // adds to POST or URL querystring based on Method
-			//request.AddUrlSegment("id", "123"); // replaces matching token in request.Resource
-			
-			// add files to upload (works with compatible verbs)
-			//request.AddFile(path);
 		}
 
 		//--------------------------------------------------
