@@ -59,6 +59,7 @@ namespace Resta.Domain
 			{
 				string json = File.ReadAllText(fullname);
 				RestEnvironment res = JsonConvert.DeserializeObject<RestEnvironment>(json);
+				res.values.Add("$timestamp", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.FFF"));
 				return res;
 			}
 			catch (Exception ex)

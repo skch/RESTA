@@ -15,6 +15,8 @@ namespace Resta.Model
 		public string taskid;
 		public string url;
 		public string time;
+		public Dictionary<string, string> header = new Dictionary<string, string>();
+		public object input;
 		public string security;
 		public long duration;
 		public int htmlcode;
@@ -22,6 +24,5 @@ namespace Resta.Model
 		public List<string> warnings = new List<string>();
 		public object response;
 		public string raw;
-		public object input;
 	}
 }

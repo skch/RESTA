@@ -131,8 +131,9 @@ namespace Resta.Domain
 					return null;
 				}
 				var request = new RestRequest(method);
-				if (script.shared?.header != null) addRequestHeader(env, request, script.shared.header);
-				if (task.header != null) addRequestHeader(env, request, task.header);
+				if (script.shared?.header != null) addToHeader(env, res, script.shared.header);
+				if (task.header != null) addToHeader(env, res, task.header);
+				setRequestHeader(request, res);
 				res.input = null;
 				if (task.body != null) res.input = addRequestBody(res, env, request, task.body);
 				request.Timeout = 5000;
@@ -181,12 +182,25 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private void addRequestHeader(RestEnvironment env, RestRequest request, Dictionary<string, string> header)
+		private void addToHeader(RestEnvironment env, ApiCallResult res, Dictionary<string, string> header)
 		{
 			foreach (var key in header.Keys)
 			{
-				request.AddHeader(key, mustache(header[key], env));
+				string value = mustache(header[key], env);
+				if (res.header.ContainsKey(key))
+				{
+					res.header[key] = value;
+				} else 
+				res.header.Add(key, value);
 			}
+		}
+
+		//--------------------------------------------------
+		private void setRequestHeader(RestRequest request, ApiCallResult res)
+		{
+			if (res.header.Count == 0) return;
+			foreach (var key in res.header.Keys)
+				request.AddHeader(key, res.header[key]);
 		}
 
 		//--------------------------------------------------

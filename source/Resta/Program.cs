@@ -16,7 +16,7 @@ namespace Resta
 	class Program
 	{
 	
-		static string AppVersion = "1.1.10";
+		static string AppVersion = "1.1.11";
 		static void Main(string[] args)
 		{
 			FluentConsole
