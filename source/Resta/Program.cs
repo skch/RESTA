@@ -71,6 +71,11 @@ namespace Resta
 		{
 			if (context.HasErrors) return null;
 			var res = new RestaParams();
+			if (args.Length == 0)
+			{
+				res.NeedHelp = true;
+				return res;
+			}
 
 			foreach (var cp in args)
 			{
@@ -86,8 +91,9 @@ namespace Resta
 						case "out": res.OutputPath = value; break;
 						case "in": res.InputPath = value; break;
 						case "keep": res.KeepSuccess = true; break;
-						case "v": res.Verbose = true; break;
+						case "debug": res.Verbose = true; break;
 						case "rh": res.ResponseHeader = true; break;
+						case "ff": res.FailFast = true; break;
 						default: res.NeedHelp = true; break;
 					}
 				}
@@ -123,13 +129,15 @@ namespace Resta
 					
 				default:
 					Console.WriteLine("USAGE:");
-					Console.WriteLine("resta RunbookFile {options}");
+					Console.WriteLine("resta runbook {options}");
 					Console.WriteLine("");
 					Console.WriteLine("Options:");
 					Console.WriteLine(" -in:{path}    Define Path for input data");
 					Console.WriteLine(" -out:{path}   Define Path to output the results");
 					Console.WriteLine(" -sc:{path}    Define Path for schemas");
 					Console.WriteLine(" -keep         Save the result even when passed the test");
+					Console.WriteLine(" -rh           Include response header");
+					Console.WriteLine(" -ff           Stop script execution after first error");
 					break;
 			}
 			

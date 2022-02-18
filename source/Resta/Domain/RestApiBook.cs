@@ -34,6 +34,7 @@ namespace Resta.Domain
 			tcase.ToSaveSuccess = opt.KeepSuccess;
 			tcase.DisplayLog = opt.Verbose;
 			tcase.IncludeResponseHeader = opt.ResponseHeader;
+			tcase.FailFast = opt.FailFast;
 			var list = new List<RestScript>();
 			foreach (var scriptName in book.scripts)
 			{
@@ -45,7 +46,8 @@ namespace Resta.Domain
 			Console.WriteLine("Environment: {0}", env.title);
 			foreach (var scriptData in list)
 			{
-				tcase.Execute(context, env, scriptData);
+				bool success = tcase.Execute(context, env, scriptData);
+				if (!success & opt.FailFast) break;
 			}
 			
 			

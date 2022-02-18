@@ -9,13 +9,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using HandlebarsDotNet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
-using Nito.AsyncEx;
 using Resta.Model;
 using RestSharp;
 
@@ -29,6 +27,7 @@ namespace Resta.Domain
 		public bool ToSaveSuccess = false;
 		public bool DisplayLog = false;
 		public bool IncludeResponseHeader = false;
+		public bool FailFast = false;
 		
 		public RestApiCase()
 		{
@@ -48,13 +47,13 @@ namespace Resta.Domain
 				if (task.assert == null) 
 					return context.SetError(false, $"Task {script.id}/{task.id}: missing assert");
 
-				task.method = ucfirst(task.method);	
+				task.method = task.method.ToUpper();	
 				switch (task.method)
 				{
-					case "Get":
-					case "Delete": break;
-					case "Post":
-					case "Put":
+					case "GET":
+					case "DELETE": break;
+					case "POST":
+					case "PUT":
 						if (string.IsNullOrEmpty(task.body)) 
 							return context.SetError(false, $"Task {script.id}/{task.id}: missing body");
 						break;
@@ -71,16 +70,22 @@ namespace Resta.Domain
 			if (context.HasErrors) return false;
 
 			Console.WriteLine("Script {0} in {1}", script.title, env.title);
+			bool bigsuccess = true;
 			foreach (var task in script.tasks)
 			{
 				ClearResult(context, "api-"+script.id + "-"+task.id+".json");
 				var rsp = executeTask(context, env, script, task);
 				if (rsp == null) continue;
-				ValidateResponse(context, env, task, rsp);
+				bool success = ValidateResponse(context, env, task, rsp);
 				SaveResponse(context, rsp, "api-"+script.id + "-"+task.id+".json");
+				if (!success & FailFast)
+				{
+					verbose("Terminating script because of failure");
+					return false;
+				}
+				if (!success) bigsuccess = false;
 			}
-			return true;
-			
+			return bigsuccess;
 		}
 
 		//--------------------------------------------------
@@ -90,14 +95,12 @@ namespace Resta.Domain
 			if (task.disabled) return null;
 			Console.Write("  - {0}:", task.title);
 			var res = createResultObject(context, env, script, task);
-			var opt = createCallOptions(context, env, script, task);
 			
+			var client = createRestClient(context, task);
 			ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-			if (task.x509 != null) setClientCertificate(context, opt, task, res);
+			if (task.x509 != null) setClientCertificate(context, client, task, res);
 			
-			var client = createRestClient(context, opt, task);
-			var request = prepareRequest(context, res, env, script, task);
-				
+			var request = prepareRequest(context, res, env, script, task);			
 			var response = getResponse(context, res, client, request);
 			updateResult(context, res, response);
 			return res;
@@ -107,14 +110,12 @@ namespace Resta.Domain
 		#region Before the call
 		
 		//--------------------------------------------------
-		private RestClient createRestClient(ProcessContext context, RestClientOptions opt, RestTask task)
+		private RestClient createRestClient(ProcessContext context, RestTask task)
 		{
 			if (context.HasErrors) return null;
 			try
 			{
-				var hc = new HttpClient();
-				hc.BaseAddress = new Uri(task.basepath);
-				var client = new RestClient(hc, opt);
+				var client = new RestClient(task.basepath);
 				return client;
 			} catch (Exception ex)
 			{
@@ -123,7 +124,7 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private bool setClientCertificate(ProcessContext context, RestClientOptions opt, RestTask task, ApiCallResult res)
+		private bool setClientCertificate(ProcessContext context, RestClient client, RestTask task, ApiCallResult res)
 		{
 			if (context.HasErrors) return false;
 			try
@@ -135,8 +136,8 @@ namespace Resta.Domain
 				if (!File.Exists(certFile)) return context.SetError(false, "Certificate file does not exist: "+certFile);
 				X509Certificate2 certificate = new X509Certificate2(certFile, task.x509.password);
 				
-				opt.ClientCertificates = new X509CertificateCollection() { certificate };
-				opt.Proxy = new WebProxy();		
+				client.ClientCertificates = new X509CertificateCollection() { certificate };
+				client.Proxy = new WebProxy();		
 				//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;		
 				ServicePointManager.ServerCertificateValidationCallback += (s, cert, chain, sslPolicyErrors) => true;
 				res.security = task.x509.file;
@@ -172,24 +173,6 @@ namespace Resta.Domain
 			} catch (Exception ex)
 			{
 				return context.SetError<ApiCallResult>(null, "Prepare Result", ex);
-			}
-		}
-
-		//--------------------------------------------------
-		private RestClientOptions createCallOptions(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
-		{
-			if (context.HasErrors) return null;
-			try
-			{
-				var opt = new RestClientOptions
-				{
-					UserAgent = "RESTA/1.1"
-				};
-				
-				return opt;
-			} catch (Exception ex)
-			{
-				return context.SetError<RestClientOptions>(null, "Prepare Client Options", ex);
 			}
 		}
 		
@@ -231,18 +214,14 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private RestResponse getResponse(ProcessContext context, ApiCallResult res, RestClient client, RestRequest request)
+		private IRestResponse getResponse(ProcessContext context, ApiCallResult res, RestClient client, RestRequest request)
 		{
 			if (context.HasErrors) return null;
 			try
 			{
 				if (client == null || request == null) return null;
 				var start = DateTime.Now;
-				//var task = client.ExecuteAsync(request);
-				
-				var response = AsyncContext.Run(() => client.ExecuteAsync(request));
-			
-				//IRestResponse response = client.Execute(request);
+				IRestResponse response = client.Execute(request);
 				var fd = DateTime.Now - start;
 				res.duration = (long)fd.TotalMilliseconds;
 				if (response.ErrorException != null)
@@ -250,12 +229,9 @@ namespace Resta.Domain
 					res.warnings.Add(response.ErrorException.Message);
 				}
 				return response;
-				//client.ExecuteAsync(request, response1 => {
-				//	Console.WriteLine(response1.Content);
-				//});
 			} catch (Exception ex)
 			{
-				return context.SetError<RestResponse>(null, "Get HTTP Response", ex);
+				return context.SetError<IRestResponse>(null, "Get HTTP Response", ex);
 			}
 			
 			
@@ -305,27 +281,26 @@ namespace Resta.Domain
 					res.warnings.Add("Cannot find body file: "+fullname);
 					return null;
 				}
-				string json = mustache(File.ReadAllText(fullname), env);
+				string rbody = mustache(File.ReadAllText(fullname), env);
 				string ext = Path.GetExtension(fullname).ToLower();
 				switch (ext)
 				{
 					case ".json":
-						var data = JsonConvert.DeserializeObject(json);
+						var data = JsonConvert.DeserializeObject(rbody);
 						request.RequestFormat = DataFormat.Json;
-						request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
+						request.AddJsonBody(rbody);
 						return data;
 						
 					case ".xml":
 						request.RequestFormat = DataFormat.Xml;
-						request.AddParameter("application/xml; charset=utf-8", json, ParameterType.RequestBody);
-						return new XmlInput(json);
+						request.AddXmlBody(rbody);
+						return new XmlInput(rbody);
 						
 					default:
 						res.warnings.Add("Unsupported type: "+ext);
 						return null;
 				}
-				
-				//request.AddJsonBody(data);
+
 			}
 			catch (Exception ex)
 			{
@@ -339,7 +314,7 @@ namespace Resta.Domain
 		#region After the call
 		
 		//--------------------------------------------------
-		private void updateResult(ProcessContext context, ApiCallResult res, RestResponse response)
+		private void updateResult(ProcessContext context, ApiCallResult res, IRestResponse response)
 		{
 			if (context.HasErrors)
 			{
@@ -447,7 +422,7 @@ namespace Resta.Domain
 				if (task.read != null && result.warnings.Count == 0)
 					readApiResponse(context, env, result, task.read);
 
-				return true;
+				return result.warnings.Count == 0;
 
 			}
 			catch (Exception ex)
@@ -558,8 +533,6 @@ namespace Resta.Domain
 					.Text(" ")
 					.With(c => result.warnings.Count == 0 ? c.Green : c.Yellow)
 					.Line(result.warnings.Count == 0 ? "passed" : "failed");
-				//if (result.errors.Count == 0) Console.WriteLine(" completed");
-				//else Console.WriteLine(" failed");
 				if (!ToSaveSuccess && result.warnings.Count == 0) return true;
 				string fileApiResponse = Path.Combine(OutputPath, fname);
 				string jsonApiResponse = JsonConvert.SerializeObject(result, Formatting.Indented);

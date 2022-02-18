@@ -20,5 +20,6 @@ namespace Resta.Model
 		public bool KeepSuccess = false;
 		public bool Verbose = false;
 		public bool ResponseHeader = false;
+		public bool FailFast = false;
 	}
 }
