@@ -11,25 +11,26 @@ resta {runbook} -out:{output-dir} -sc:{schema-dir} -in:{data-dir} [options]
 **PARAMETERS**:
 
 * `runbook`: Filename of the RESTA runbook to execute.
-
-*  `-out:{path}`: Specify the path to a folder where RESTA will save the test results (output files)
-
+* `-out:{path}`: Specify the path to a folder where RESTA will save the test results (output files)
 * `-in:{path}`: Specify the path to a folder where RESTA will find the data files referenced in the tasks as “body” 
-
 * `-sc:{path}`: Specify the path to a folder where RESTA will find the schema files. Every schema file name should have prefix `schema-`
 
 
 
 **OPTIONS**:
 
-`-keep` To keep the result file for successful tests
+`-keep`: To keep the result file for successful tests
+
+`-rh`: Include the HTTP response header to the test result report
+
+`-ff` To stop execution after first error (fail fast)
 
 
 
 **EXAMPLE**:
 
 ```shell
-Resta test/runbook.json -out:results -sc:test/schema -in:test/data -keep
+Resta test/runbook.json -out:results -sc:test/schema -in:test/data -keep -ff
 ```
 
 
