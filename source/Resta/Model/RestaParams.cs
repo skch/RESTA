@@ -18,5 +18,7 @@ namespace Resta.Model
 		public string SchemaPath = "";
 		public string EnvironmentName = "";
 		public bool KeepSuccess = false;
+		public bool Verbose = false;
+		public bool ResponseHeader = false;
 	}
 }

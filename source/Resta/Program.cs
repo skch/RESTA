@@ -16,12 +16,11 @@ namespace Resta
 	class Program
 	{
 	
-		static string AppVersion = "1.1.11";
+		static string AppVersion = "1.1.12";
 		static void Main(string[] args)
 		{
 			FluentConsole
 				.Text("REST API Automated Testing").Cyan.Line(" v"+AppVersion);
-			//Console.WriteLine("REST API Automated Testing");
 			var context = new ProcessContext();
 			var cparams = getProcessParams(context, args);
 			if (cparams.NeedHelp)
@@ -78,14 +77,17 @@ namespace Resta
 				if (cp.StartsWith('-'))
 				{
 					string pair = cp.Substring(1, cp.Length - 1);
-					var parts = pair.Split(':');
-					switch (parts[0].ToLower())
+
+					(string key, string value) = splitCmdOption(pair);
+					switch (key.ToLower())
 					{
-						case "env": res.EnvironmentName = parts[1]; break;
-						case "sc": res.SchemaPath = parts[1]; break;
-						case "out": res.OutputPath = parts[1]; break;
-						case "in": res.InputPath = parts[1]; break;
+						case "env": res.EnvironmentName = value; break;
+						case "sc": res.SchemaPath = value; break;
+						case "out": res.OutputPath = value; break;
+						case "in": res.InputPath = value; break;
 						case "keep": res.KeepSuccess = true; break;
+						case "v": res.Verbose = true; break;
+						case "rh": res.ResponseHeader = true; break;
 						default: res.NeedHelp = true; break;
 					}
 				}
@@ -99,7 +101,16 @@ namespace Resta
 			//if (string.IsNullOrEmpty(res.Cmd)) res.NeedHelp = true;
 			return res;
 		}
-		
+
+		private static (string, string) splitCmdOption(string cmdoption)
+		{
+			if (string.IsNullOrEmpty(cmdoption)) return ("","");
+			var parts = cmdoption.Split(':');
+			string key = parts[0];
+			string tail = (parts.Length>1) ? cmdoption.Substring(key.Length+1) : "";
+			return (key, tail);
+		}
+
 		//--------------------------------------------------
 		static void help(string command)
 		{

@@ -2,6 +2,7 @@
 	"id": "sampleapi",
 	"title": "Test Sample API",
 	"shared": {
+		"timeout": 10000,
 		"header": {
 			"Accept": "applicstion/json"
 		}
@@ -29,6 +30,9 @@
 			"title": "Get Single Employee",
 			"method": "GET",
 			"url": "{{url}}/v1/employee/{{employee}}",
+			"header": {
+				"x-value": "time-{{$timestamp}}"
+			},
 			"assert": {
 				"response": 200,
 				"type": "application/json",

@@ -23,5 +23,8 @@ namespace Resta.Model
 		public Dictionary<string, string> header;
 		public ApiAssert assert;
 		public ApiRead[] read;
+
+		internal string basepath;
+		internal string urlpath;
 	}
 }

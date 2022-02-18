@@ -9,11 +9,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using HandlebarsDotNet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
+using Nito.AsyncEx;
 using Resta.Model;
 using RestSharp;
 
@@ -26,6 +28,8 @@ namespace Resta.Domain
 		public string OutputPath = "";
 		public string SchemaPath = "";
 		public bool ToSaveSuccess = false;
+		public bool DisplayLog = false;
+		public bool IncludeResponseHeader = false;
 		
 		public RestApiCase()
 		{
@@ -44,21 +48,30 @@ namespace Resta.Domain
 					return context.SetError(false, $"Task {script.id}/{task.id}: missing url");
 				if (task.assert == null) 
 					return context.SetError(false, $"Task {script.id}/{task.id}: missing assert");
+
+				task.method = ucfirst(task.method);	
 				switch (task.method)
 				{
-					case "GET":
-					case "DELETE": break;
-					case "POST":
-					case "PUT":
+					case "Get":
+					case "Delete": break;
+					case "Post":
+					case "Put":
 						if (string.IsNullOrEmpty(task.body)) 
 							return context.SetError(false, $"Task {script.id}/{task.id}: missing body");
 						break;
+					default: 	return context.SetError(false, $"Task {script.id}/{task.id}: unsupported method");
 				}
 			}
 			return true;
 			
 		}
-		
+
+		private string ucfirst(string input)
+		{
+			if (string.IsNullOrEmpty(input)) return input;
+			return input[0].ToString().ToUpper() + input.Substring(1).ToLower();
+		}
+
 		//===========================================================
 		public bool Execute(ProcessContext context, RestEnvironment env, RestScript script)
 		{
@@ -82,47 +95,112 @@ namespace Resta.Domain
 		{
 			if (context.HasErrors) return null;
 			if (task.disabled) return null;
-
-			string path = mustache(task.url, env);
-			var res = new ApiCallResult
-			{
-				scriptid = script.id,
-				taskid = task.id,
-				url = task.method+" "+path,
-				time = DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss")
-			};
-
 			Console.Write("  - {0}:", task.title);
-			var client = new RestClient(path) {Timeout = 80000 };
-			var request = prepareRequest(res, env, script, task);
+			var res = createResultObject(context, env, script, task);
+			var opt = createCallOptions(context, env, script, task);
 			
 			ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+			if (task.x509 != null) setClientCertificate(context, opt, task, res);
 			
-			if (task.x509 != null)
+			var client = createRestClient(context, opt, env, script, task);
+			var request = prepareRequest(context, res, env, script, task);
+				
+			var response = getResponse(context, res, client, request);
+			updateResult(context, res, response);
+			return res;
+		}
+
+		private RestClient createRestClient(ProcessContext context, RestClientOptions opt, RestEnvironment env, RestScript script, RestTask task)
+		{
+			if (context.HasErrors) return null;
+			try
+			{
+				var hc = new HttpClient();
+				hc.BaseAddress = new Uri(task.basepath);
+				var client = new RestClient(hc, opt);
+				return client;
+			} catch (Exception ex)
+			{
+				return context.SetError<RestClient>(null, "Create Rest Client", ex);
+			}
+		}
+
+		private bool setClientCertificate(ProcessContext context, RestClientOptions opt, RestTask task, ApiCallResult res)
+		{
+			if (context.HasErrors) return false;
+			try
 			{
 				Console.Write("🔑");
-				if (string.IsNullOrEmpty(task.x509.file)) return context.SetError<ApiCallResult>(null, "Certificate file is missing");
+				if (string.IsNullOrEmpty(task.x509.file)) return context.SetError(false, "Certificate file is missing");
 				var certFile = Path.Combine(InputPath, task.x509.file);
-				if (!File.Exists(certFile)) return context.SetError<ApiCallResult>(null, "Certificate file does not exist: "+certFile);
+				if (!File.Exists(certFile)) return context.SetError(false, "Certificate file does not exist: "+certFile);
 				X509Certificate2 certificate = new X509Certificate2(certFile, task.x509.password);
-				client.ClientCertificates = new X509CertificateCollection() { certificate };
-				client.Proxy = new WebProxy();		
+				
+				opt.ClientCertificates = new X509CertificateCollection() { certificate };
+				opt.Proxy = new WebProxy();		
 				//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;		
 				ServicePointManager.ServerCertificateValidationCallback += (s, cert, chain, sslPolicyErrors) => true;
 				res.security = task.x509.file;
+				return true;
+			} catch (Exception ex)
+			{
+				return context.SetError(false, "Set Client Certificate", ex);
 			}
-				
-			var response = getResponse(res, client, request);
-			updateResult(res, response);
-			return res;
 		}
+
+		private ApiCallResult createResultObject(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
+		{
+			if (context.HasErrors) return null;
+			try
+			{
+				string path = mustache(task.url, env);
+				verbose($"Task URL {path}");
+
+				var uri = new Uri(path);    
+				task.basepath = uri.GetLeftPart(System.UriPartial.Authority);
+				task.urlpath = uri.PathAndQuery;
+				verbose($"Task base {task.basepath}");
+				verbose($"Task path {task.urlpath}");
+				var res = new ApiCallResult
+				{
+					scriptid = script.id,
+					taskid = task.id,
+					url = task.method+" "+path,
+					time = DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss")
+				};
+				return res;
+			} catch (Exception ex)
+			{
+				return context.SetError<ApiCallResult>(null, "Prepare Result", ex);
+			}
+		}
+
+		private void verbose(string msg)
+		{
+			if (DisplayLog) Console.WriteLine("    @"+msg);
+		}
+
+		private RestClientOptions createCallOptions(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
+		{
+			if (context.HasErrors) return null;
+			try
+			{
+				var opt = new RestClientOptions();
+				return opt;
+			} catch (Exception ex)
+			{
+				return context.SetError<RestClientOptions>(null, "Prepare Client Options", ex);
+			}
+		}
+		
 
 		#region Before the call
 		
 
 		//--------------------------------------------------
-		private RestRequest prepareRequest(ApiCallResult res, RestEnvironment env, RestScript script, RestTask task)
+		private RestRequest prepareRequest(ProcessContext context, ApiCallResult res, RestEnvironment env, RestScript script, RestTask task)
 		{
+			if (context.HasErrors) return null;
 			try
 			{
 				if (!Enum.TryParse(task.method, out RestSharp.Method method))
@@ -130,7 +208,8 @@ namespace Resta.Domain
 					res.warnings.Add("Invalid method " + task.method);
 					return null;
 				}
-				var request = new RestRequest(method);
+
+				var request = new RestRequest(task.urlpath, method);
 				if (script.shared?.header != null) addToHeader(env, res, script.shared.header);
 				if (task.header != null) addToHeader(env, res, task.header);
 				setRequestHeader(request, res);
@@ -156,29 +235,42 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private IRestResponse getResponse(ApiCallResult res, RestClient client, RestRequest request)
+		private RestResponse getResponse(ProcessContext context, ApiCallResult res, RestClient client, RestRequest request)
 		{
-			if (client == null || request == null) return null;
-			var start = DateTime.Now;
-			IRestResponse response = client.Execute(request);
-			var fd = DateTime.Now - start;
-			res.duration = (long)fd.TotalMilliseconds;
-			if (response.ErrorException != null)
+			if (context.HasErrors) return null;
+			try
 			{
-				res.warnings.Add(response.ErrorException.Message);
+				if (client == null || request == null) return null;
+				var start = DateTime.Now;
+				//var task = client.ExecuteAsync(request);
+				
+				var response = AsyncContext.Run(() => client.ExecuteAsync(request));
+			
+				//IRestResponse response = client.Execute(request);
+				var fd = DateTime.Now - start;
+				res.duration = (long)fd.TotalMilliseconds;
+				if (response.ErrorException != null)
+				{
+					res.warnings.Add(response.ErrorException.Message);
+				}
+				return response;
+				//client.ExecuteAsync(request, response1 => {
+				//	Console.WriteLine(response1.Content);
+				//});
+			} catch (Exception ex)
+			{
+				return context.SetError<RestResponse>(null, "Get HTTP Response", ex);
 			}
-			return response;
-			//client.ExecuteAsync(request, response1 => {
-			//	Console.WriteLine(response1.Content);
-			//});
+			
+			
 		}
 
 		//--------------------------------------------------
 		private string mustache(string source, RestEnvironment env)
 		{
-
 			var template = Handlebars.Compile(source);
-			return template(env.values);
+			var list = env.includingDynamic();
+			return template(list);
 		}
 
 		//--------------------------------------------------
@@ -209,6 +301,7 @@ namespace Resta.Domain
 			try
 			{
 				string fullname = Path.Combine(InputPath, fname);
+				verbose($"Reading data {fname}");
 				if (!File.Exists(fullname))
 					fullname = Path.Combine(InputPath, fname + ".json");
 				if (!File.Exists(fullname))
@@ -250,18 +343,34 @@ namespace Resta.Domain
 		#region After the call
 		
 		//--------------------------------------------------
-		private void updateResult(ApiCallResult res, IRestResponse response)
+		private void updateResult(ProcessContext context, ApiCallResult res, RestResponse response)
 		{
-			if (response == null) return;
+			if (context.HasErrors)
+			{
+				res.warnings.Add(context.ErrorMessage);
+				return;
+			}
+			if (response == null) {
+				res.warnings.Add("Response does not exists");
+				return;
+			}
 			try
 			{
 				res.htmlcode = (int)response.StatusCode;
 				res.raw = response.Content; // raw content as string
 				
 				var rheader = new Dictionary<string, object>();
+				int cnt = 1;
 				foreach (var rh in response.Headers)
 				{
-					rheader.Add(rh.Name, rh.Value);
+					if (rheader.ContainsKey(rh.Name))
+					{
+						rheader.Add($"{rh.Name}-{cnt}", rh.Value);
+						cnt++;
+					} else
+					{
+						rheader.Add(rh.Name, rh.Value);
+					}
 					switch (rh.Name)
 					{
 						case "Content-Type":
@@ -271,12 +380,15 @@ namespace Resta.Domain
 					}
 				}
 
+				// TODO: Process different response content types
+				if (IncludeResponseHeader) res.responseHeader = rheader;
 				res.response = parseAsJson(res.raw);
 				if (res.response!=null) res.raw = null;
 			}
 			catch (Exception ex)
 			{
-				res.warnings.Add("Exception: "+ex.Message);
+				res.warnings.Add("Cannot update results: "+ex.Message);
+				verbose(ex.StackTrace);
 			}
 
 		}
@@ -371,10 +483,7 @@ namespace Resta.Domain
 				{
 					var element = locateByPath(context, token, read.locate);
 					if (string.IsNullOrEmpty(element)) element = "~";
-					if (env.values.ContainsKey(read.target)) 
-						env.values[read.target] = element; 
-					else 
-						env.values.Add(read.target, element);
+					env.SetValue(read.target, element);
 					Console.Write(", {0}={1} ", read.target, element);
 				}
 				return true;

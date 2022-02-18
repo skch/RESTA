@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq.Expressions;
+using System.Runtime.Serialization.Formatters;
 using Newtonsoft.Json;
 using Resta.Model;
 
@@ -31,6 +32,8 @@ namespace Resta.Domain
 			tcase.SchemaPath = opt.SchemaPath;
 			tcase.InputPath = opt.InputPath;
 			tcase.ToSaveSuccess = opt.KeepSuccess;
+			tcase.DisplayLog = opt.Verbose;
+			tcase.IncludeResponseHeader = opt.ResponseHeader;
 			var list = new List<RestScript>();
 			foreach (var scriptName in book.scripts)
 			{
@@ -57,9 +60,9 @@ namespace Resta.Domain
 			if (!File.Exists(fullname)) return context.SetError<RestEnvironment>(null, "Cannot find environment file");
 			try
 			{
-				string json = File.ReadAllText(fullname);
+				string json = File.ReadAllText(fullname);			
 				RestEnvironment res = JsonConvert.DeserializeObject<RestEnvironment>(json);
-				res.values.Add("$timestamp", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.FFF"));
+				
 				return res;
 			}
 			catch (Exception ex)
@@ -67,7 +70,7 @@ namespace Resta.Domain
 				return context.SetError<RestEnvironment>(null, "Load Environment", ex);
 			}
 		}
-		
+
 		//--------------------------------------------------
 		private RestScript loadScriptData(ProcessContext context, string path, string fname)
 		{
