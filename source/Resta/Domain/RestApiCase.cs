@@ -23,7 +23,6 @@ namespace Resta.Domain
 {
 	public class RestApiCase
 	{
-
 		public string InputPath = "";
 		public string OutputPath = "";
 		public string SchemaPath = "";
@@ -66,12 +65,6 @@ namespace Resta.Domain
 			
 		}
 
-		private string ucfirst(string input)
-		{
-			if (string.IsNullOrEmpty(input)) return input;
-			return input[0].ToString().ToUpper() + input.Substring(1).ToLower();
-		}
-
 		//===========================================================
 		public bool Execute(ProcessContext context, RestEnvironment env, RestScript script)
 		{
@@ -102,7 +95,7 @@ namespace Resta.Domain
 			ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 			if (task.x509 != null) setClientCertificate(context, opt, task, res);
 			
-			var client = createRestClient(context, opt, env, script, task);
+			var client = createRestClient(context, opt, task);
 			var request = prepareRequest(context, res, env, script, task);
 				
 			var response = getResponse(context, res, client, request);
@@ -110,7 +103,11 @@ namespace Resta.Domain
 			return res;
 		}
 
-		private RestClient createRestClient(ProcessContext context, RestClientOptions opt, RestEnvironment env, RestScript script, RestTask task)
+
+		#region Before the call
+		
+		//--------------------------------------------------
+		private RestClient createRestClient(ProcessContext context, RestClientOptions opt, RestTask task)
 		{
 			if (context.HasErrors) return null;
 			try
@@ -125,6 +122,7 @@ namespace Resta.Domain
 			}
 		}
 
+		//--------------------------------------------------
 		private bool setClientCertificate(ProcessContext context, RestClientOptions opt, RestTask task, ApiCallResult res)
 		{
 			if (context.HasErrors) return false;
@@ -133,6 +131,7 @@ namespace Resta.Domain
 				Console.Write("🔑");
 				if (string.IsNullOrEmpty(task.x509.file)) return context.SetError(false, "Certificate file is missing");
 				var certFile = Path.Combine(InputPath, task.x509.file);
+				verbose($"Reading certificate {certFile}");
 				if (!File.Exists(certFile)) return context.SetError(false, "Certificate file does not exist: "+certFile);
 				X509Certificate2 certificate = new X509Certificate2(certFile, task.x509.password);
 				
@@ -148,6 +147,7 @@ namespace Resta.Domain
 			}
 		}
 
+		//--------------------------------------------------
 		private ApiCallResult createResultObject(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
 		{
 			if (context.HasErrors) return null;
@@ -175,17 +175,17 @@ namespace Resta.Domain
 			}
 		}
 
-		private void verbose(string msg)
-		{
-			if (DisplayLog) Console.WriteLine("    @"+msg);
-		}
-
+		//--------------------------------------------------
 		private RestClientOptions createCallOptions(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
 		{
 			if (context.HasErrors) return null;
 			try
 			{
-				var opt = new RestClientOptions();
+				var opt = new RestClientOptions
+				{
+					UserAgent = "RESTA/1.1"
+				};
+				
 				return opt;
 			} catch (Exception ex)
 			{
@@ -193,10 +193,6 @@ namespace Resta.Domain
 			}
 		}
 		
-
-		#region Before the call
-		
-
 		//--------------------------------------------------
 		private RestRequest prepareRequest(ProcessContext context, ApiCallResult res, RestEnvironment env, RestScript script, RestTask task)
 		{
@@ -582,5 +578,18 @@ namespace Resta.Domain
 
 		#endregion
 		
+		#region Utilities
+		private void verbose(string msg)
+		{
+			if (DisplayLog) Console.WriteLine("    @"+msg);
+		}
+
+		private string ucfirst(string input)
+		{
+			if (string.IsNullOrEmpty(input)) return input;
+			return input[0].ToString().ToUpper() + input.Substring(1).ToLower();
+		}
+
+		#endregion
 	}
 }
