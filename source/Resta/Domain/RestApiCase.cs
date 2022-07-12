@@ -28,6 +28,7 @@ namespace Resta.Domain
 		public bool DisplayLog = false;
 		public bool IncludeResponseHeader = false;
 		public bool FailFast = false;
+		public bool RemoveRaw = true;
 		
 		public RestApiCase()
 		{
@@ -354,7 +355,8 @@ namespace Resta.Domain
 				// TODO: Process different response content types
 				if (IncludeResponseHeader) res.responseHeader = rheader;
 				res.response = parseAsJson(res.raw);
-				if (res.response!=null) res.raw = null;
+				if (res.response!=null && RemoveRaw) res.raw = null;
+				
 			}
 			catch (Exception ex)
 			{
@@ -408,7 +410,7 @@ namespace Resta.Domain
 						validateAssert(task.assert.type, result.type, "Invalid content type", result);
 					if (result.response != null)
 					{
-						result.raw = null;
+						if (RemoveRaw) result.raw = null;
 
 						if (task.assert.schema != null)
 						{
