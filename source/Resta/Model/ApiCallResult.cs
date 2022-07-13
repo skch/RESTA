@@ -12,33 +12,38 @@ namespace Resta.Model
 {
 	public class ApiCallResult
 	{
-		public string scriptid;
-		public string taskid;
-		public string url;
-		public string time;
-		public Dictionary<string, string> header = new Dictionary<string, string>();
+		public string scriptid = "";
+		public string taskid = "";
 		
 		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-		public object input;
+		public string? title;
+		
+		public string url = "";
+		public string time = "";
+		public Dictionary<string, string>? header = new Dictionary<string, string>();
 		
 		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-		public string security;
+		public object? input;
+		
+		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+		public string? security;
 		
 		public long duration;
 		public int htmlcode;
 		
 		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-		public string type;
+		public string? type;
 		
-		public List<string> warnings = new List<string>();
-		
-		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-		public object response;
+		public List<string?> warnings = new List<string?>();
 		
 		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-		public Dictionary<string, object> responseHeader;
+		public object? response;
 		
 		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
-		public string raw;
+		public Dictionary<string, object?>? responseHeader;
+		
+		[JsonProperty(NullValueHandling=NullValueHandling.Ignore)]
+		public string? raw;
+
 	}
 }

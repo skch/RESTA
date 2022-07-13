@@ -13,24 +13,37 @@ namespace Resta.Domain
 {
 	public class ProcessContext
 	{
-		private string errorMessage;
-		private string trace = "";
+		private string? _errorMessage;
+		private string? _trace = "";
 		
-		public string ErrorMessage => errorMessage;
-		public string ErrorDebug => errorMessage + trace;
-		public bool HasErrors => !string.IsNullOrEmpty(errorMessage);
+		public string? ErrorMessage => _errorMessage;
+		public string ErrorDebug => _errorMessage + _trace;
+		public bool HasErrors => !string.IsNullOrEmpty(_errorMessage);
 
-		public T SetError<T>(T value, string msg)
+		public T SetError<T>(T value, string? msg)
 		{
-			errorMessage = msg;
+			_errorMessage = msg;
 			return value;
+		}
+		
+		public T SetErrorNull<T>(string? msg)
+		{
+			_errorMessage = msg;
+			return default!;
 		}
 		
 		public T SetError<T>(T value, string msg, Exception ex)
 		{
-			errorMessage = $"Exception: {msg}. {ex.Message}";
-			trace = ex.StackTrace;
+			_errorMessage = $"Exception: {msg}. {ex.Message}";
+			_trace = ex.StackTrace;
 			return value;
+		}
+		
+		public T? SetErrorNull<T>(string msg, Exception ex)
+		{
+			_errorMessage = $"Exception: {msg}. {ex.Message}";
+			_trace = ex.StackTrace;
+			return default!;
 		}
 
 	}

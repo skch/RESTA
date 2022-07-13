@@ -22,7 +22,9 @@ namespace Resta.Domain
 		{
 			if (context.HasErrors) return false;
 			Console.WriteLine("Runbook: {0}", book.title);
-
+			if (book.scripts == null) return context.SetError(false, "Book scripts is missing");
+			if (!string.IsNullOrEmpty(ename)) book.environment = ename;
+			if (book.environment == null) return context.SetError(false, "Book environment is missing");
 			if (string.IsNullOrEmpty(ename)) ename = book.environment;
 			var env = loadEnvironment(context, opt.ScriptPath, ename);
 			if (context.HasErrors) return false;
@@ -55,39 +57,42 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		public static RestEnvironment loadEnvironment(ProcessContext context, string path, string fname)
+		private static RestEnvironment loadEnvironment(ProcessContext context, string path, string fname)
 		{
-			if (context.HasErrors) return null;
+			RestEnvironment res = new RestEnvironment();
+			if (context.HasErrors) return res;
 			var fullname = Path.Combine(path, "env-" + fname + ".json");
-			if (!File.Exists(fullname)) return context.SetError<RestEnvironment>(null, "Cannot find environment file");
+			if (!File.Exists(fullname)) return context.SetError<RestEnvironment>(res, "Cannot find environment file");
 			try
 			{
 				string json = File.ReadAllText(fullname);			
-				RestEnvironment res = JsonConvert.DeserializeObject<RestEnvironment>(json);
-				
-				return res;
+				var env = JsonConvert.DeserializeObject<RestEnvironment>(json);
+				if (env == null) return context.SetError(res, "Cannot load environment JSON");
+				return env;
 			}
 			catch (Exception ex)
 			{
-				return context.SetError<RestEnvironment>(null, "Load Environment", ex);
+				return context.SetError(res, "Load Environment", ex);
 			}
 		}
 
 		//--------------------------------------------------
 		private RestScript loadScriptData(ProcessContext context, string path, string fname)
 		{
-			if (context.HasErrors) return null;
+			RestScript res = new RestScript();
+			if (context.HasErrors) return res;
 			var fullname = Path.Combine(path, "script-" + fname + ".json");
-			if (!File.Exists(fullname)) return context.SetError<RestScript>(null, "Cannot find script "+fname);
+			if (!File.Exists(fullname)) return context.SetError<RestScript>(res, "Cannot find script "+fname);
 			try
 			{
 				string json = File.ReadAllText(fullname);
-				RestScript res = JsonConvert.DeserializeObject<RestScript>(json);
-				return res;
+				var script = JsonConvert.DeserializeObject<RestScript>(json);
+				if (script == null) return context.SetError(res, "Cannot load script JSON");
+				return script;
 			}
 			catch (Exception ex)
 			{
-				return context.SetError<RestScript>(null, "Load script "+fname, ex);
+				return context.SetError(res, "Load script "+fname, ex);
 			}
 		}
 	}

@@ -16,7 +16,7 @@ namespace Resta
 	class Program
 	{
 	
-		static string AppVersion = "1.1.13";
+		static string AppVersion = "1.1.14";
 		static void Main(string[] args)
 		{
 			FluentConsole
@@ -51,17 +51,18 @@ namespace Resta
 		//--------------------------------------------------
 		static RunBook loadRunBook(ProcessContext context, RestaParams cparams)
 		{
-			if (context.HasErrors) return null;
-			if (!File.Exists(cparams.BookName)) return context.SetError<RunBook>(null, "Cannot find runbook file");
+			RunBook res = new RunBook();
+			if (context.HasErrors) return res;
+			if (!File.Exists(cparams.BookName)) return context.SetError<RunBook>(res, "Cannot find runbook file");
 			try
 			{
 				string json = File.ReadAllText(cparams.BookName);
-				RunBook res = JsonConvert.DeserializeObject<RunBook>(json);
-				return res;
+				var book = JsonConvert.DeserializeObject<RunBook>(json);
+				return book ?? context.SetError(res, "Cannot read runbook JSON");
 			}
 			catch (Exception ex)
 			{
-				return context.SetError<RunBook>(null, "Load Runbook", ex);
+				return context.SetError<RunBook>(res, "Load Runbook", ex);
 			}
 			
 		}
@@ -69,8 +70,8 @@ namespace Resta
 		//--------------------------------------------------
 		static RestaParams getProcessParams(ProcessContext context, string[] args)
 		{
-			if (context.HasErrors) return null;
 			var res = new RestaParams();
+			if (context.HasErrors) return res;
 			if (args.Length == 0)
 			{
 				res.NeedHelp = true;
@@ -102,9 +103,9 @@ namespace Resta
 					res.BookName = cp;
 				}
 
-				res.ScriptPath = Path.GetDirectoryName(res.BookName);
+				var scriptPath = Path.GetDirectoryName(res.BookName);
+				res.ScriptPath = (string.IsNullOrEmpty(scriptPath)) ? "": scriptPath;
 			}
-			//if (string.IsNullOrEmpty(res.Cmd)) res.NeedHelp = true;
 			return res;
 		}
 

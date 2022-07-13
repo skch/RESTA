@@ -9,8 +9,8 @@ namespace Resta.Model
 {
 	public class ApiRead
 	{
-		public string locate;
-		public string source;
-		public string target;
+		public string? locate;
+		public string? source;
+		public string? target;
 	}
 }

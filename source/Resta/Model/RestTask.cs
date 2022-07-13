@@ -11,20 +11,20 @@ namespace Resta.Model
 {
 	public class RestTask
 	{
-		public string id;
+		public string? id;
 		public bool disabled = false;
-		public string title;
-		public string description;
+		public string? title;
+		public string? description;
 		public int? timeout;
-		public string method;
-		public CertificateSettings x509; 
-		public string url;
-		public string body;
-		public Dictionary<string, string> header;
-		public ApiAssert assert;
-		public ApiRead[] read;
+		public string? method;
+		public CertificateSettings? x509; 
+		public string? url;
+		public string? body;
+		public Dictionary<string, string>? header;
+		public ApiAssert? assert;
+		public ApiRead[]? read;
 
-		internal string basepath;
-		internal string urlpath;
+		internal string? basepath;
+		internal string? urlpath;
 	}
 }

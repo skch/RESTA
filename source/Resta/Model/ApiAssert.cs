@@ -10,8 +10,8 @@ namespace Resta.Model
 	public class ApiAssert
 	{
 		public int? response;
-		public int[] responses;
-		public string type;
-		public string schema;
+		public int[]? responses;
+		public string? type;
+		public string? schema;
 	}
 }

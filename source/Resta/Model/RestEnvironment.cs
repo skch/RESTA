@@ -12,9 +12,9 @@ namespace Resta.Model
 {
 	public class RestEnvironment
 	{
-		public string title;
-		public Dictionary<string, string> values = new Dictionary<string, string>();
-		private Random randomEngine = new Random();
+		public string? title;
+		public readonly Dictionary<string, string> values = new Dictionary<string, string>();
+		private readonly Random _randomEngine = new Random();
 		
 		public void SetValue(string key, string value)
 		{
@@ -29,7 +29,7 @@ namespace Resta.Model
 			res.Add("$timestamp", getEpochTime());
 			res.Add("$guid", Guid.NewGuid().ToString());
 
-			int rint = randomEngine.Next();
+			int rint = _randomEngine.Next();
 			res.Add("$randomInt", rint.ToString());
 			
 			// TODO: To add more dynamic variables
