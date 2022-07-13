@@ -39,10 +39,15 @@ namespace Resta.Domain
 		public bool Validate(ProcessContext context, RestEnvironment env, RestScript script)
 		{
 			if (context.HasErrors) return false;
+			if (script.id == null) return context.SetError(false, "Script ID is missing");
+			if (script.tasks == null) return context.SetError(false, "Script does not have tasks");
 
 			foreach (var task in script.tasks)
 			{
 				if (task.disabled) continue;
+				if (task.id == null) return context.SetError(false, $"Task {script.id}: task has no ID");
+				if (task.method == null) return context.SetError(false, $"Task {script.id}/{task.id}: no method");
+				
 				if (string.IsNullOrEmpty(task.url)) 
 					return context.SetError(false, $"Task {script.id}/{task.id}: missing url");
 				if (task.assert == null) 
@@ -69,8 +74,12 @@ namespace Resta.Domain
 		public bool Execute(ProcessContext context, RestEnvironment env, RestScript script)
 		{
 			if (context.HasErrors) return false;
+			if (string.IsNullOrEmpty(env.title)) return context.SetError(false, "Environment title is missing");
+			if (script.id == null) return context.SetError(false, "Script ID is missing");
+			if (script.tasks == null) return context.SetError(false, "Script tasks are missing");
+			var scriptTitle = (string.IsNullOrEmpty(script.title)) ? script.id : script.title;
 
-			Console.WriteLine("Script {0} in {1}", script.title, env.title);
+			Console.WriteLine("Script {0} in {1}", scriptTitle, env.title);
 			bool bigsuccess = true;
 			foreach (var task in script.tasks)
 			{
@@ -155,6 +164,7 @@ namespace Resta.Domain
 		{
 			var res = new ApiCallResult();
 			if (context.HasErrors) return res;
+			if (script.id == null) return context.SetError<ApiCallResult>(res, "Script ID is missing");
 			if (task.id == null) return context.SetError<ApiCallResult>(res, "Task ID is missing");
 			if (task.url == null) return context.SetError<ApiCallResult>(res, "Task URL is missing");
 			try
@@ -402,7 +412,7 @@ namespace Resta.Domain
 			if (res.type != "application/json") return true;
 			try
 			{
-				res.response = JsonConvert.DeserializeObject(res.raw);
+				res.response = (res.raw == null) ? "": JsonConvert.DeserializeObject(res.raw);
 			}
 			catch (Exception ex)
 			{
@@ -422,6 +432,7 @@ namespace Resta.Domain
 		{
 			if (context.HasErrors) return false;
 			if (result == null) return context.SetError(false, "Api Call Result is missing");
+			if (env == null) return context.SetError(false, "Environment is missing");
 			try
 			{
 				if (task.assert != null)
@@ -468,9 +479,14 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private void validateAssert<T>(T expect, T actual, string msg, ApiCallResult res) where T : IComparable
+		private void validateAssert<T>(T expect, T actual, string msg, ApiCallResult res) where T : IComparable?
 		{
 			if (res.warnings.Count > 0) return;
+			if (expect == null)
+			{
+				res.warnings.Add($"{msg}: {actual}. Expected is missing");
+				return;
+			}
 			if (expect.CompareTo(actual) != 0) 
 				res.warnings.Add($"{msg}: {actual}. Expected {expect}");
 		}
@@ -482,10 +498,12 @@ namespace Resta.Domain
 			if (context.HasErrors) return false;
 			try
 			{
+				if (res.response == null) return false;
 				var token = (JToken) res.response;
-				if (token == null) return false;
 				foreach (var read in readin)
 				{
+					if (read.locate == null) return false;
+					if (read.target == null) return false;
 					var element = locateByPath(context, token, read.locate);
 					if (string.IsNullOrEmpty(element)) element = "~";
 					env.SetValue(read.target, element);
@@ -507,7 +525,7 @@ namespace Resta.Domain
 			{
 				var element = token.SelectToken(query);
 				if (element == null) return "~";
-				var res = (string)element;
+				var res = (string?)element;
 				return res ?? "~";
 			} catch (Exception ex)
 			{
@@ -524,7 +542,7 @@ namespace Resta.Domain
 				string schemaJson = File.ReadAllText(fschema);
 				JSchema schema = JSchema.Parse(schemaJson);
 
-				JToken? response = (JToken) res.response;
+				var response = (JToken?) res.response;
 				if (response == null)
 				{
 					res.warnings.Add($"Cannot parse response");
