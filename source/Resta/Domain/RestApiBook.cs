@@ -17,26 +17,23 @@ namespace Resta.Domain
 {
 	public class RestApiBook
 	{
+	
 		//===========================================================
-		public bool Execute(ProcessContext context, string ename, RestaParams opt, RunBook book)
+		public bool Execute(ProcessContext context, RestaParams opt, RunBook book)
 		{
 			if (context.HasErrors) return false;
 			Console.WriteLine("Runbook: {0}", book.title);
-			if (book.scripts == null) return context.SetError(false, "Book scripts is missing");
-			if (!string.IsNullOrEmpty(ename)) book.environment = ename;
-			if (book.environment == null) return context.SetError(false, "Book environment is missing");
-			if (string.IsNullOrEmpty(ename)) ename = book.environment;
-			var env = loadEnvironment(context, opt.ScriptPath, ename);
-			if (context.HasErrors) return false;
-
-			var tcase = new RestApiCase();
-			tcase.OutputPath = opt.OutputPath;
-			tcase.SchemaPath = opt.SchemaPath;
-			tcase.InputPath = opt.InputPath;
-			tcase.ToSaveSuccess = opt.KeepSuccess;
-			tcase.DisplayLog = opt.Verbose;
-			tcase.IncludeResponseHeader = opt.ResponseHeader;
-			tcase.FailFast = opt.FailFast;
+			var tcase = new RestApiCase
+			{
+				OutputPath = opt.OutputPath,
+				SchemaPath = opt.SchemaPath,
+				InputPath = opt.InputPath,
+				ToSaveSuccess = opt.KeepSuccess,
+				DisplayLog = opt.Verbose,
+				IncludeResponseHeader = opt.ResponseHeader,
+				FailFast = opt.FailFast
+			};
+			/*
 			var list = new List<RestScript>();
 			foreach (var scriptName in book.scripts)
 			{
@@ -44,11 +41,13 @@ namespace Resta.Domain
 				tcase.Validate(context, env, scriptData);
 				list.Add(scriptData);
 			}
+			*/
 			
-			Console.WriteLine("Environment: {0}", env.title);
-			foreach (var scriptData in list)
+			
+			Console.WriteLine("Environment: {0}", book.environment.title);
+			foreach (var scriptData in book.scripts)
 			{
-				bool success = tcase.Execute(context, env, scriptData);
+				bool success = tcase.Execute(context, book.environment, scriptData);
 				if (!success & opt.FailFast) break;
 			}
 			
@@ -56,7 +55,11 @@ namespace Resta.Domain
 			return true;
 		}
 		
+		
+
+		
 		//--------------------------------------------------
+		/*
 		private static RestEnvironment loadEnvironment(ProcessContext context, string path, string fname)
 		{
 			RestEnvironment res = new RestEnvironment();
@@ -75,8 +78,10 @@ namespace Resta.Domain
 				return context.SetError(res, "Load Environment", ex);
 			}
 		}
+		*/
 
 		//--------------------------------------------------
+		/*
 		private RestScript loadScriptData(ProcessContext context, string path, string fname)
 		{
 			RestScript res = new RestScript();
@@ -95,5 +100,6 @@ namespace Resta.Domain
 				return context.SetError(res, "Load script "+fname, ex);
 			}
 		}
+		*/
 	}
 }

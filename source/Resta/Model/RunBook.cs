@@ -9,8 +9,8 @@ namespace Resta.Model
 {
 	public class RunBook
 	{
-		public string? title;
-		public string? environment;
-		public string[]? scripts;
+		public string title = "";
+		public RestEnvironment environment = new RestEnvironment();
+		public List<RestScript> scripts = new List<RestScript>();
 	}
 }

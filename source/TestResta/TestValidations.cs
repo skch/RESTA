@@ -12,32 +12,31 @@ namespace TestResta
 		{
 			var cparams = new RestaParams();
 			var bookData = new RunBook();
-			var context = executeBook("", cparams, bookData);
+			var context = executeBook(cparams, bookData);
 			Assert.True(context.HasErrors);
 			Assert.Equal("Book scripts is missing", context.ErrorMessage);
 			
 			bookData.scripts = createEmptyArray();
-			context = executeBook("", cparams, bookData);
+			context = executeBook(cparams, bookData);
 			Assert.True(context.HasErrors);
 			Assert.Equal("Book environment is missing", context.ErrorMessage);
 
-			context = executeBook("dev", cparams, bookData);
+			context = executeBook(cparams, bookData);
 			Assert.True(context.HasErrors);
 			Assert.Equal("Cannot find environment file", context.ErrorMessage);
 		}
 
-		private ProcessContext executeBook(string env, RestaParams cparams, RunBook bookData)
+		private ProcessContext executeBook(RestaParams cparams, RunBook bookData)
 		{
 			var context = new ProcessContext();
 			var book = new RestApiBook();
-			book.Execute(context, env, cparams, bookData);
+			book.Execute(context, cparams, bookData);
 			return context;
 		}
 
-		private string[] createEmptyArray()
+		private List<RestScript> createEmptyArray()
 		{
-			var list = new List<string>();
-			return list.ToArray();
+			return new List<RestScript>();
 		}
 	}
 }

@@ -13,5 +13,14 @@ namespace Resta.Model
 		public int[]? responses;
 		public string? type;
 		public string? schema;
+
+		public bool isEmpty()
+		{
+			if (response != null) return false;
+			if (responses != null) return false;
+			if (type != null) return false;
+			if (schema != null) return false;
+			return true;
+		}
 	}
 }

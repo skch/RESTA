@@ -11,20 +11,49 @@ namespace Resta.Model
 {
 	public class RestTask
 	{
-		public string? id;
-		public bool disabled = false;
-		public string? title;
-		public string? description;
-		public int? timeout;
-		public string? method;
-		public CertificateSettings? x509; 
-		public string? url;
-		public string? body;
-		public Dictionary<string, string>? header;
+		public string id; 
+		public string title;
+		public string description = "";
+		public int timeout;
+		public string method;
+		public CertificateSettings? x509;
+		public string url;
+		public string body;
+		public Dictionary<string, string> header = new Dictionary<string, string>();
 		public ApiAssert? assert;
-		public ApiRead[]? read;
+		public List<ApiRead> read = new List<ApiRead>();
 
-		internal string? basepath;
-		internal string? urlpath;
+		internal string scheme = "";//****
+		internal string? basepath;//****
+		internal string? urlpath;//****
+
+		public RestTask(RestTaskJson data)
+		{
+			id = data.id ?? string.Empty;
+			title = data.title ?? string.Empty;
+			description = data.description ?? string.Empty;
+			url = data.url ?? string.Empty;
+			body = data.body ?? string.Empty;
+			method = data.method ?? "GET";
+			if (data.timeout != null) timeout = (int)data.timeout;
+			if (data.assert != null) assert = data.assert;
+			if (data.read != null)
+			{
+				foreach (var part in data.read)
+				{
+					read.Add(new ApiRead(part));
+				}
+			}
+			if (data.header != null) header = data.header;
+			if (data.x509 != null)
+			{
+				x509 = new CertificateSettings
+				{
+					file = data.x509.file ?? string.Empty,
+					password = data.x509.password ?? string.Empty
+				};
+			}
+	
+		}
 	}
 }

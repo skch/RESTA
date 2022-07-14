@@ -35,48 +35,11 @@ namespace Resta.Domain
 			
 		}
 		
-		//===========================================================
-		public bool Validate(ProcessContext context, RestEnvironment env, RestScript script)
-		{
-			if (context.HasErrors) return false;
-			if (script.id == null) return context.SetError(false, "Script ID is missing");
-			if (script.tasks == null) return context.SetError(false, "Script does not have tasks");
-
-			foreach (var task in script.tasks)
-			{
-				if (task.disabled) continue;
-				if (task.id == null) return context.SetError(false, $"Task {script.id}: task has no ID");
-				if (task.method == null) return context.SetError(false, $"Task {script.id}/{task.id}: no method");
-				
-				if (string.IsNullOrEmpty(task.url)) 
-					return context.SetError(false, $"Task {script.id}/{task.id}: missing url");
-				if (task.assert == null) 
-					return context.SetError(false, $"Task {script.id}/{task.id}: missing assert");
-
-				task.method = task.method.ToUpper();	
-				switch (task.method)
-				{
-					case "GET":
-					case "DELETE": break;
-					case "POST":
-					case "PUT":
-						if (string.IsNullOrEmpty(task.body)) 
-							return context.SetError(false, $"Task {script.id}/{task.id}: missing body");
-						break;
-					default: 	return context.SetError(false, $"Task {script.id}/{task.id}: unsupported method");
-				}
-			}
-			return true;
-			
-		}
-
+		
 		//===========================================================
 		public bool Execute(ProcessContext context, RestEnvironment env, RestScript script)
 		{
 			if (context.HasErrors) return false;
-			if (string.IsNullOrEmpty(env.title)) return context.SetError(false, "Environment title is missing");
-			if (script.id == null) return context.SetError(false, "Script ID is missing");
-			if (script.tasks == null) return context.SetError(false, "Script tasks are missing");
 			var scriptTitle = (string.IsNullOrEmpty(script.title)) ? script.id : script.title;
 
 			Console.WriteLine("Script {0} in {1}", scriptTitle, env.title);
@@ -97,11 +60,11 @@ namespace Resta.Domain
 			return bigsuccess;
 		}
 
+
 		//--------------------------------------------------
 		private ApiCallResult? executeTask(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
 		{
 			if (context.HasErrors) return null;
-			if (task.disabled) return null;
 			Console.Write("  - {0}:", task.title);
 			var res = createResultObject(context, env, script, task);
 			
@@ -164,15 +127,13 @@ namespace Resta.Domain
 		{
 			var res = new ApiCallResult();
 			if (context.HasErrors) return res;
-			if (script.id == null) return context.SetError<ApiCallResult>(res, "Script ID is missing");
-			if (task.id == null) return context.SetError<ApiCallResult>(res, "Task ID is missing");
-			if (task.url == null) return context.SetError<ApiCallResult>(res, "Task URL is missing");
 			try
 			{
 				string path = mustache(task.url, env);
 				verbose($"Task URL {path}");
 
-				var uri = new Uri(path);    
+				var uri = new Uri(path);   
+				task.scheme = uri.GetLeftPart(System.UriPartial.Scheme);
 				task.basepath = uri.GetLeftPart(System.UriPartial.Authority);
 				task.urlpath = uri.PathAndQuery;
 				verbose($"Task base {task.basepath}");
@@ -203,16 +164,23 @@ namespace Resta.Domain
 					res.warnings.Add("Invalid method " + task.method);
 					return null;
 				}
+				
+				if (task.scheme != "http://" && task.scheme != "https://")
+				{
+					res.warnings.Add("Unsupported protocol: " + res.url);
+					return null;
+				}
+
 
 				var request = new RestRequest(task.urlpath, method);
 				if (script.shared?.header != null) addToHeader(env, res, script.shared.header);
-				if (task.header != null) addToHeader(env, res, task.header);
+				addToHeader(env, res, task.header);
 				setRequestHeader(request, res);
 				res.input = null;
-				if (task.body != null) res.input = addRequestBody(res, env, request, task.body);
+				if (!string.IsNullOrEmpty(task.body)) res.input = addRequestBody(res, env, request, task.body);
 				request.Timeout = 5000;
 				if (script.shared?.timeout != null) request.Timeout = (int)script.shared.timeout;
-				if (task.timeout != null) request.Timeout = (int)task.timeout;
+				if (task.timeout != 0) request.Timeout = (int)task.timeout;
 				
 				ServicePointManager.Expect100Continue = true;
 				ServicePointManager.DefaultConnectionLimit = 9999;
@@ -345,7 +313,7 @@ namespace Resta.Domain
 				return;
 			}
 			if (response == null) {
-				res.warnings.Add("Response does not exists");
+				res.warnings.Add("Could not make the HTTP call");
 				return;
 			}
 
@@ -466,11 +434,8 @@ namespace Resta.Domain
 					}
 				}
 
-				if (task.read != null && result.warnings.Count == 0)
-					readApiResponse(context, env, result, task.read);
-
+				readApiResponse(context, env, result, task.read);
 				return result.warnings.Count == 0;
-
 			}
 			catch (Exception ex)
 			{
@@ -493,17 +458,18 @@ namespace Resta.Domain
 
 		
 		//--------------------------------------------------
-		private bool readApiResponse(ProcessContext context, RestEnvironment env, ApiCallResult res, IEnumerable<ApiRead> readin)
+		private bool readApiResponse(ProcessContext context, RestEnvironment env, ApiCallResult res, ICollection<ApiRead> readin)
 		{
 			if (context.HasErrors) return false;
+			if (res.warnings.Count != 0) return true;
+			if (res.type != "application/json") return true;
+			if (readin.Count == 0) return true;
 			try
 			{
 				if (res.response == null) return false;
 				var token = (JToken) res.response;
 				foreach (var read in readin)
 				{
-					if (read.locate == null) return false;
-					if (read.target == null) return false;
 					var element = locateByPath(context, token, read.locate);
 					if (string.IsNullOrEmpty(element)) element = "~";
 					env.SetValue(read.target, element);

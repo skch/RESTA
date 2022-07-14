@@ -12,7 +12,7 @@ namespace Resta.Model
 {
 	public class ApiTaskSettings
 	{
-		public int? timeout;
-		public Dictionary<string, string>? header;
+		public int timeout = 1000;
+		public Dictionary<string, string> header = new Dictionary<string, string>();
 	}
 }

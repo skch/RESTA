@@ -12,10 +12,21 @@ namespace Resta.Model
 {
 	public class RestEnvironment
 	{
-		public string? title;
+		public string title;
 		public readonly Dictionary<string, string> values = new Dictionary<string, string>();
 		private readonly Random _randomEngine = new Random();
 		
+		public RestEnvironment()
+		{
+			title = "Undefined Environment";
+		}
+
+		public RestEnvironment(RestEnvironmentJson data)
+		{
+			title = data.title ?? string.Empty;
+			if (data.values != null) values = data.values;
+		}
+
 		public void SetValue(string key, string value)
 		{
 			if (values.ContainsKey(key)) 

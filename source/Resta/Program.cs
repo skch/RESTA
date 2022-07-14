@@ -5,8 +5,6 @@
 This is a free software (MIT license) */
 #endregion
 
-using System;
-using System.IO;
 using Newtonsoft.Json;
 using Resta.Domain;
 using Resta.Model;
@@ -28,10 +26,16 @@ namespace Resta
 				help(cparams.Cmd); return;
 			}
 
-			var bookData = loadRunBook(context, cparams);
+			Console.WriteLine("Loading scripts...");
+			var dataValidator = new RestaScriptValidator();
+			dataValidator.LoadRunbook(context, cparams);
+			var runbook = dataValidator.ValidateScripts(context);
+
+			//var bookData = loadRunBook(context, cparams);
 			var book = new RestApiBook();
 			var start = DateTime.Now;
-			book.Execute(context, cparams.EnvironmentName, cparams, bookData);
+			//book.Execute(context, cparams.EnvironmentName, cparams, runbook);
+			book.Execute(context, cparams, runbook);
 			var time = DateTime.Now - start;
 			
 			Console.WriteLine();
@@ -40,12 +44,11 @@ namespace Resta
 				.With(c => !context.HasErrors ? c.Green : c.Red)
 				.Line(!context.HasErrors ? "Completed" : "Failed");
 				
-			Console.WriteLine("Total Duration: {0}", time);
-
 			if (context.HasErrors)
 			{
 				Console.WriteLine(context.ErrorMessage);
 			}
+			Console.WriteLine("Total Duration: {0}", time);
 		}
 		
 		//--------------------------------------------------
