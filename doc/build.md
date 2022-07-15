@@ -4,11 +4,11 @@
 
 ### Run using .NET Core
 
-To run RESTA from the source code, you need to install .NET Core. Current version support .NET Core 3.1 and 5.x frameworks. You need to specify which framework you want to use:
+To run RESTA from the source code, you need to install .NET Core. The latest version requires .NET Core 6.x framework. To run RESTA using .NET SDK use the following command:
 
 ```shell
 cd Source/Resta
-dotnet run {runbook} [options] --framework netcoreapp5.0
+dotnet run {runbook} [options]
 ```
 
 
@@ -19,7 +19,7 @@ To use RESTA on Windows without the .NET framework installed, you need to build 
 
 ```shell
 cd Source/Resta
-dotnet publish -c Release -r win10-x64 -f netcoreapp5.0 --self-contained -o {path-for-binaries}
+dotnet publish -c Release -r win10-x64 -f net6.0 --self-contained -o {path-for-binaries}
 ```
 
 
@@ -30,7 +30,7 @@ To use RESTA on Mac OS without the .NET framework installed, you need to build a
 
 ```shell
 cd Source/Resta
-dotnet publish -c Release -r osx.11.0-x64 -f netcoreapp5.0 --self-contained -o {path-for-binaries}
+dotnet publish -c Release -r osx.11.0-x64 -f net6.0 --self-contained -o {path-for-binaries}
 ```
 
 

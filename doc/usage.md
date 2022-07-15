@@ -14,6 +14,7 @@ resta {runbook} -out:{output-dir} -sc:{schema-dir} -in:{data-dir} [options]
 * `-out:{path}`: Specify the path to a folder where RESTA will save the test results (output files)
 * `-in:{path}`: Specify the path to a folder where RESTA will find the data files referenced in the tasks as “body” 
 * `-sc:{path}`: Specify the path to a folder where RESTA will find the schema files. Every schema file name should have prefix `schema-`
+* `-env:{name}`: you can override the environment name specified in the runbook by providing the environment name in command line.
 
 
 

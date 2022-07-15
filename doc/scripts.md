@@ -362,5 +362,9 @@ Here is an example of the RESTA test report file:
 
 
 
+In addition to the execution reports, RESTA will save the updated environment to the output folder. The file `env-{name}.json` will contain all key-value pairs including the ones obtained by scripts using the `read` section.
+
+
+
 ---
 
