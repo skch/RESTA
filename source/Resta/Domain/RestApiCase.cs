@@ -5,9 +5,6 @@
 This is a free software (MIT license) */
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using HandlebarsDotNet;
@@ -21,13 +18,13 @@ namespace Resta.Domain
 {
 	public class RestApiCase
 	{
-		public string InputPath = "";
-		public string OutputPath = "";
-		public string SchemaPath = "";
-		public bool ToSaveSuccess = false;
-		public bool DisplayLog = false;
-		public bool IncludeResponseHeader = false;
-		public bool FailFast = false;
+		public string inputPath = "";
+		public string outputPath = "";
+		public string schemaPath = "";
+		public bool toSaveSuccess = false;
+		public bool displayLog = false;
+		public bool includeResponseHeader = false;
+		public bool failFast = false;
 		public bool RemoveRaw = true;
 		
 		public RestApiCase()
@@ -43,43 +40,71 @@ namespace Resta.Domain
 			var scriptTitle = (string.IsNullOrEmpty(script.title)) ? script.id : script.title;
 
 			Console.WriteLine("Script {0} in {1}", scriptTitle, env.title);
-			bool bigsuccess = true;
+			bool totalSuccess = true;
 			foreach (var task in script.tasks)
 			{
-				ClearResult(context, "api-"+script.id + "-"+task.id+".json");
+				deleteOldReportFile(context, "api-"+script.id + "-"+task.id+".json");
 				var rsp = executeTask(context, env, script, task);
-				bool success = ValidateResponse(context, env, task, rsp);
-				SaveResponse(context, rsp, "api-"+script.id + "-"+task.id+".json");
-				if (!success & FailFast)
+				bool success = reviewResponse(context, env, task, rsp);
+				saveReport(context, rsp, "api-"+script.id + "-"+task.id+".json");
+				if (!success & failFast)
 				{
 					verbose("Terminating script because of failure");
 					return false;
 				}
-				if (!success) bigsuccess = false;
+				if (!success) totalSuccess = false;
 			}
-			return bigsuccess;
+			return totalSuccess;
 		}
 
 
 		//--------------------------------------------------
-		private ApiCallResult? executeTask(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
+		private ApiCallReport executeTask(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
 		{
-			if (context.HasErrors) return null;
+			var res = new ApiCallReport();
+			if (context.HasErrors) return res;
 			Console.Write("  - {0}:", task.title);
-			var res = createResultObject(context, env, script, task);
-			
+			initiateReport(context, res, env, script, task);
 			var client = createRestClient(context, task);
 			ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 			if (task.x509 != null) setClientCertificate(context, client, task, res);
 			
 			var request = prepareRequest(context, res, env, script, task);			
-			var response = getResponse(context, res, client, request);
-			updateResult(context, res, response);
+			var response = makeRestCall(context, res, client, request);
+			updateReport(context, res, response);
 			return res;
 		}
 
 
 		#region Before the call
+		
+		//--------------------------------------------------
+		private bool initiateReport(ProcessContext context, ApiCallReport report, RestEnvironment env, RestScript script, RestTask task)
+		{
+			if (context.HasErrors) return false;
+			try
+			{
+				string path = mustache(task.url, env);
+				verbose($"Task URL {path}");
+
+				var uri = new Uri(path);   
+				task.scheme = uri.GetLeftPart(System.UriPartial.Scheme);
+				task.basepath = uri.GetLeftPart(System.UriPartial.Authority);
+				task.urlpath = uri.PathAndQuery;
+				verbose($"Task base {task.basepath}");
+				verbose($"Task path {task.urlpath}");
+
+				report.scriptid = script.id;
+				report.title = script.title;
+				report.taskid = script.id;
+				report.url = task.method+" "+path;
+				report.time = DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss");
+				return true;
+			} catch (Exception ex)
+			{
+				return context.SetError(false, "Prepare Result", ex);
+			}
+		}
 		
 		//--------------------------------------------------
 		private RestClient? createRestClient(ProcessContext context, RestTask task)
@@ -97,7 +122,7 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private bool setClientCertificate(ProcessContext context, RestClient? client, RestTask task, ApiCallResult res)
+		private bool setClientCertificate(ProcessContext context, RestClient? client, RestTask task, ApiCallReport res)
 		{
 			if (context.HasErrors) return false;
 			if (client == null) return context.SetError(false, "Rest Client is not initialized");
@@ -105,7 +130,7 @@ namespace Resta.Domain
 			{
 				Console.Write("🔑");
 				if (string.IsNullOrEmpty(task.x509?.file)) return context.SetError(false, "Certificate file is missing");
-				var certFile = Path.Combine(InputPath, task.x509.file);
+				var certFile = Path.Combine(inputPath, task.x509.file);
 				verbose($"Reading certificate {certFile}");
 				if (!File.Exists(certFile)) return context.SetError(false, "Certificate file does not exist: "+certFile);
 				X509Certificate2 certificate = new X509Certificate2(certFile, task.x509.password);
@@ -123,37 +148,7 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private ApiCallResult createResultObject(ProcessContext context, RestEnvironment env, RestScript script, RestTask task)
-		{
-			var res = new ApiCallResult();
-			if (context.HasErrors) return res;
-			try
-			{
-				string path = mustache(task.url, env);
-				verbose($"Task URL {path}");
-
-				var uri = new Uri(path);   
-				task.scheme = uri.GetLeftPart(System.UriPartial.Scheme);
-				task.basepath = uri.GetLeftPart(System.UriPartial.Authority);
-				task.urlpath = uri.PathAndQuery;
-				verbose($"Task base {task.basepath}");
-				verbose($"Task path {task.urlpath}");
-				return new ApiCallResult
-				{
-					scriptid = script.id,
-					title = script.title,
-					taskid = task.id,
-					url = task.method+" "+path,
-					time = DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss")
-				};
-			} catch (Exception ex)
-			{
-				return context.SetError<ApiCallResult>(res, "Prepare Result", ex);
-			}
-		}
-		
-		//--------------------------------------------------
-		private RestRequest? prepareRequest(ProcessContext context, ApiCallResult res, RestEnvironment env, RestScript script, RestTask task)
+		private RestRequest? prepareRequest(ProcessContext context, ApiCallReport res, RestEnvironment env, RestScript script, RestTask task)
 		{
 			if (context.HasErrors) return null;
 			if (task.urlpath == null) return context.SetErrorNull<RestRequest>("Task Url is missing");
@@ -171,7 +166,6 @@ namespace Resta.Domain
 					return null;
 				}
 
-
 				var request = new RestRequest(task.urlpath, method);
 				if (script.shared?.header != null) addToHeader(env, res, script.shared.header);
 				addToHeader(env, res, task.header);
@@ -186,7 +180,6 @@ namespace Resta.Domain
 				ServicePointManager.DefaultConnectionLimit = 9999;
 				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
-				
 				return request;
 			}
 			catch (Exception ex)
@@ -198,7 +191,7 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private IRestResponse? getResponse(ProcessContext context, ApiCallResult res, RestClient? client, RestRequest? request)
+		private IRestResponse? makeRestCall(ProcessContext context, ApiCallReport res, RestClient? client, RestRequest? request)
 		{
 			if (context.HasErrors) return null;
 			try
@@ -231,7 +224,7 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private void addToHeader(RestEnvironment? env, ApiCallResult? res, Dictionary<string, string> header)
+		private void addToHeader(RestEnvironment? env, ApiCallReport? res, Dictionary<string, string> header)
 		{
 			if (res == null) return;
 			if (res.header == null) return;
@@ -247,7 +240,7 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private void setRequestHeader(RestRequest? request, ApiCallResult? res)
+		private void setRequestHeader(RestRequest? request, ApiCallReport? res)
 		{
 			if (res == null) return;
 			if (request == null) return;
@@ -258,15 +251,15 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private object? addRequestBody(ApiCallResult res,  RestEnvironment? env, RestRequest? request, string fname)
+		private object? addRequestBody(ApiCallReport res,  RestEnvironment? env, RestRequest? request, string fname)
 		{
 			if (request == null) return null;
 			try
 			{
-				string fullname = Path.Combine(InputPath, fname);
+				string fullname = Path.Combine(inputPath, fname);
 				verbose($"Reading data {fname}");
 				if (!File.Exists(fullname))
-					fullname = Path.Combine(InputPath, fname + ".json");
+					fullname = Path.Combine(inputPath, fname + ".json");
 				if (!File.Exists(fullname))
 				{
 					res.warnings.Add("Cannot find body file: "+fullname);
@@ -305,7 +298,7 @@ namespace Resta.Domain
 		#region After the call
 		
 		//--------------------------------------------------
-		private void updateResult(ProcessContext context, ApiCallResult res, IRestResponse? response)
+		private void updateReport(ProcessContext context, ApiCallReport res, IRestResponse? response)
 		{
 			if (context.HasErrors)
 			{
@@ -323,7 +316,7 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private bool readResponseHeader(ProcessContext context, ApiCallResult res, IRestResponse? response)
+		private bool readResponseHeader(ProcessContext context, ApiCallReport res, IRestResponse? response)
 		{
 			if (context.HasErrors) return false;
 			if (response == null) return false;
@@ -353,7 +346,7 @@ namespace Resta.Domain
 							break;
 					}
 				}
-				if (IncludeResponseHeader) res.responseHeader = rheader;
+				if (includeResponseHeader) res.responseHeader = rheader;
 				return true;
 			} catch (Exception ex)
 			{
@@ -364,7 +357,7 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private bool readResponseContent(ProcessContext context, ApiCallResult res, IRestResponse? response)
+		private bool readResponseContent(ProcessContext context, ApiCallReport res, IRestResponse? response)
 		{
 			if (context.HasErrors) return false;
 			if (response == null) return context.SetError(false, "readResponseContent:Missing response");
@@ -374,7 +367,7 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private bool parseResponseContent(ProcessContext context, ApiCallResult res)
+		private bool parseResponseContent(ProcessContext context, ApiCallReport res)
 		{
 			if (context.HasErrors) return false;
 			if (res.type != "application/json") return true;
@@ -393,14 +386,12 @@ namespace Resta.Domain
 
 		#endregion
 
-		#region Validate API call results
+		#region Review the API call report
 
 		//--------------------------------------------------
-		private bool ValidateResponse(ProcessContext context, RestEnvironment? env, RestTask task, ApiCallResult? result)
+		private bool reviewResponse(ProcessContext context, RestEnvironment env, RestTask task, ApiCallReport report)
 		{
 			if (context.HasErrors) return false;
-			if (result == null) return context.SetError(false, "Api Call Result is missing");
-			if (env == null) return context.SetError(false, "Environment is missing");
 			try
 			{
 				if (task.assert != null)
@@ -408,34 +399,34 @@ namespace Resta.Domain
 					if (task.assert.response != null)
 					{
 						var arcode = task.assert.response ?? default(int);
-						validateAssert(arcode, result.htmlcode, "Invalid response code", result);
+						validateAssert(arcode, report.htmlcode, "Invalid response code", report);
 					}
 					if (task.assert.responses != null)
 					{
 						bool match = false;
 						foreach (var rcode in task.assert.responses)
 						{
-							if (result.htmlcode == rcode) { match = true; break; }
+							if (report.htmlcode == rcode) { match = true; break; }
 						}
-						if (!match) result.warnings.Add($"Invalid response code: {result.htmlcode}.");
+						if (!match) report.warnings.Add($"Invalid response code: {report.htmlcode}.");
 					}
 					if (task.assert.type != null)
-						validateAssert(task.assert.type, result.type, "Invalid content type", result);
-					if (result.response != null)
+						validateAssert(task.assert.type, report.type, "Invalid content type", report);
+					if (report.response != null)
 					{
-						if (RemoveRaw) result.raw = null;
+						if (RemoveRaw) report.raw = null;
 
 						if (task.assert.schema != null)
 						{
-							string fname = Path.Combine(SchemaPath, "schema-"+task.assert.schema + ".json");
+							string fname = Path.Combine(schemaPath, "schema-"+task.assert.schema + ".json");
 							if (!File.Exists(fname)) return context.SetError(false, "Schema not found " + task.assert.schema);
-							validateJsonSchema(fname, result);
+							validateJsonSchema(fname, report);
 						}
 					}
 				}
 
-				readApiResponse(context, env, result, task.read);
-				return result.warnings.Count == 0;
+				readApiResponse(context, env, report, task.read);
+				return report.warnings.Count == 0;
 			}
 			catch (Exception ex)
 			{
@@ -444,7 +435,7 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private void validateAssert<T>(T expect, T actual, string msg, ApiCallResult res) where T : IComparable?
+		private void validateAssert<T>(T expect, T actual, string msg, ApiCallReport res) where T : IComparable?
 		{
 			if (res.warnings.Count > 0) return;
 			if (expect == null)
@@ -458,7 +449,7 @@ namespace Resta.Domain
 
 		
 		//--------------------------------------------------
-		private bool readApiResponse(ProcessContext context, RestEnvironment env, ApiCallResult res, ICollection<ApiRead> readin)
+		private bool readApiResponse(ProcessContext context, RestEnvironment env, ApiCallReport res, ICollection<ApiRead> readin)
 		{
 			if (context.HasErrors) return false;
 			if (res.warnings.Count != 0) return true;
@@ -500,7 +491,7 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private void validateJsonSchema(string fschema, ApiCallResult res)
+		private void validateJsonSchema(string fschema, ApiCallReport res)
 		{
 			if (res.warnings.Count > 0) return;
 			try
@@ -530,36 +521,35 @@ namespace Resta.Domain
 				
 		}
 
-		//===========================================================
-		public bool ClearResult(ProcessContext context, string fname)
+		//--------------------------------------------------
+		private bool deleteOldReportFile(ProcessContext context, string fname)
 		{
 			if (context.HasErrors) return false;
 			try
 			{
-				string fileApiResponse = Path.Combine(OutputPath, fname);
+				string fileApiResponse = Path.Combine(outputPath, fname);
 				if (File.Exists(fileApiResponse)) File.Delete(fileApiResponse);
 				return true;
 			}
 			catch (Exception ex)
 			{
-				return context.SetError(false, "Cannot delete file", ex);
+				return context.SetError(false, "Cannot delete file "+fname, ex);
 			}
 
 		}
 		
-		//===========================================================
-		public bool SaveResponse(ProcessContext context, ApiCallResult? result, string fname)
+		//--------------------------------------------------
+		private bool saveReport(ProcessContext context, ApiCallReport result, string fname)
 		{
 			if (context.HasErrors) return false;
-			if (result == null) return context.SetError(false, "API Result is not initialized");
 			try
 			{
 				FluentConsole
 					.Text(" ")
 					.With(c => result.warnings.Count == 0 ? c.Green : c.Yellow)
 					.Line(result.warnings.Count == 0 ? "passed" : "failed");
-				if (!ToSaveSuccess && result.warnings.Count == 0) return true;
-				string fileApiResponse = Path.Combine(OutputPath, fname);
+				if (!toSaveSuccess && result.warnings.Count == 0) return true;
+				string fileApiResponse = Path.Combine(outputPath, fname);
 				string jsonApiResponse = JsonConvert.SerializeObject(result, Formatting.Indented);
 				File.WriteAllText(fileApiResponse, jsonApiResponse);
 				return true;
@@ -572,14 +562,13 @@ namespace Resta.Domain
 
 		}
 
-		
-
+	
 		#endregion
 		
 		#region Utilities
 		private void verbose(string? msg)
 		{
-			if (DisplayLog) Console.WriteLine("    @"+msg);
+			if (displayLog) Console.WriteLine("    @"+msg);
 		}
 
 		private string ucfirst(string input)

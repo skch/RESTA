@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace Resta.Model
 {
-	public class ApiCallResult
+	public class ApiCallReport
 	{
 		public string scriptid = "";
 		public string taskid = "";

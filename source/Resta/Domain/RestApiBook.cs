@@ -5,11 +5,6 @@
 This is a free software (MIT license) */
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq.Expressions;
-using System.Runtime.Serialization.Formatters;
 using Newtonsoft.Json;
 using Resta.Model;
 
@@ -25,81 +20,43 @@ namespace Resta.Domain
 			Console.WriteLine("Runbook: {0}", book.title);
 			var tcase = new RestApiCase
 			{
-				OutputPath = opt.OutputPath,
-				SchemaPath = opt.SchemaPath,
-				InputPath = opt.InputPath,
-				ToSaveSuccess = opt.KeepSuccess,
-				DisplayLog = opt.Verbose,
-				IncludeResponseHeader = opt.ResponseHeader,
-				FailFast = opt.FailFast
+				outputPath = opt.outputPath,
+				schemaPath = opt.schemaPath,
+				inputPath = opt.inputPath,
+				toSaveSuccess = opt.keepSuccess,
+				displayLog = opt.verbose,
+				includeResponseHeader = opt.responseHeader,
+				failFast = opt.failFast
 			};
-			/*
-			var list = new List<RestScript>();
-			foreach (var scriptName in book.scripts)
-			{
-				var scriptData = loadScriptData(context, opt.ScriptPath, scriptName);
-				tcase.Validate(context, env, scriptData);
-				list.Add(scriptData);
-			}
-			*/
-			
-			
+
 			Console.WriteLine("Environment: {0}", book.environment.title);
 			foreach (var scriptData in book.scripts)
 			{
 				bool success = tcase.Execute(context, book.environment, scriptData);
-				if (!success & opt.FailFast) break;
+				if (!success & opt.failFast) break;
 			}
-			
-			
+
+			saveEnvironment(context, book.environment, opt.outputPath);
 			return true;
 		}
 		
-		
-
-		
 		//--------------------------------------------------
-		/*
-		private static RestEnvironment loadEnvironment(ProcessContext context, string path, string fname)
+		private bool saveEnvironment(ProcessContext context, RestEnvironment environment, string path)
 		{
-			RestEnvironment res = new RestEnvironment();
-			if (context.HasErrors) return res;
-			var fullname = Path.Combine(path, "env-" + fname + ".json");
-			if (!File.Exists(fullname)) return context.SetError<RestEnvironment>(res, "Cannot find environment file");
+			if (context.HasErrors) return false;
+			var fullname = Path.Combine(path, "env-" + environment.id + ".json");
 			try
 			{
-				string json = File.ReadAllText(fullname);			
-				var env = JsonConvert.DeserializeObject<RestEnvironment>(json);
-				if (env == null) return context.SetError(res, "Cannot load environment JSON");
-				return env;
+				string json = JsonConvert.SerializeObject(environment, Formatting.Indented); 
+				File.WriteAllText(fullname, json);
+				return true;
 			}
 			catch (Exception ex)
 			{
-				return context.SetError(res, "Load Environment", ex);
+				return context.SetError(false, "Saving environment "+environment.id, ex);
 			}
 		}
-		*/
-
-		//--------------------------------------------------
-		/*
-		private RestScript loadScriptData(ProcessContext context, string path, string fname)
-		{
-			RestScript res = new RestScript();
-			if (context.HasErrors) return res;
-			var fullname = Path.Combine(path, "script-" + fname + ".json");
-			if (!File.Exists(fullname)) return context.SetError<RestScript>(res, "Cannot find script "+fname);
-			try
-			{
-				string json = File.ReadAllText(fullname);
-				var script = JsonConvert.DeserializeObject<RestScript>(json);
-				if (script == null) return context.SetError(res, "Cannot load script JSON");
-				return script;
-			}
-			catch (Exception ex)
-			{
-				return context.SetError(res, "Load script "+fname, ex);
-			}
-		}
-		*/
+		
+	
 	}
 }

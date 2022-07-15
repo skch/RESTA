@@ -5,7 +5,6 @@ namespace Resta.Domain;
 
 public class RestaScriptValidator
 {
-
 	private RunbookJson? _bookData;
 	private RestEnvironmentJson? _envData;
 	private readonly List<RestScriptJson> _scripts = new List<RestScriptJson>();
@@ -15,10 +14,9 @@ public class RestaScriptValidator
 	public bool LoadRunbook(ProcessContext context, RestaParams options)
 	{
 		if (context.HasErrors) return false;
-		if (string.IsNullOrEmpty(options.BookName)) return context.SetError(false, "Runbook name is missing");
-		_bookData = loadRunbookFile(context, options.BookName);
+		if (string.IsNullOrEmpty(options.bookName)) return context.SetError(false, "Runbook name is missing");
+		_bookData = loadRunbookFile(context, options.bookName);
 		setupEnvironment(context, options);
-		
 		loadRunbookScripts(context, options);
 		return loadScriptsData(context, options);
 	}
@@ -29,7 +27,7 @@ public class RestaScriptValidator
 	{
 		if (context.HasErrors) return false;
 		if (_bookData ==null) return context.SetError(false, "Runbook is unavailable");
-		if (!string.IsNullOrEmpty(options.EnvironmentName)) _bookData.environment = options.EnvironmentName;
+		if (!string.IsNullOrEmpty(options.environmentName)) _bookData.environment = options.environmentName;
 		return true;
 	}
 
@@ -66,6 +64,7 @@ public class RestaScriptValidator
 			string json = File.ReadAllText(fullname);			
 			var env = JsonConvert.DeserializeObject<RestEnvironmentJson>(json);
 			if (env == null) return context.SetErrorNull<RestEnvironmentJson>("Cannot load environment JSON");
+			env.id = _bookData.environment;
 			return env;
 		}
 		catch (Exception ex)
@@ -100,10 +99,10 @@ public class RestaScriptValidator
 		if (_bookData ==null) return context.SetError(false, "Runbook is unavailable");
 		if (_bookData.scripts==null) return context.SetError(false, "No scripts in the runbook");
 		
-		_envData = loadEnvironmentFile(context, options.ScriptPath);
+		_envData = loadEnvironmentFile(context, options.scriptPath);
 		foreach (var scriptName in _bookData.scripts)
 		{
-			var scriptData = loadScriptFile(context, options.ScriptPath, scriptName);
+			var scriptData = loadScriptFile(context, options.scriptPath, scriptName);
 			if (scriptData !=null )
 			{
 				scriptData.name = scriptName; _scripts.Add(scriptData);
@@ -119,8 +118,6 @@ public class RestaScriptValidator
 		if (context.HasErrors) return false;
 		if (_bookData ==null) return context.SetError(false, "Runbook is unavailable");
 		if (_bookData.scripts==null) return context.SetError(false, "No scripts in the runbook");
-		
-		_envData = loadEnvironmentFile(context, options.ScriptPath);
 		foreach (RestScriptJson script in _scripts)
 		{
 			loadScriptData(context, script, options);
@@ -134,20 +131,20 @@ public class RestaScriptValidator
 	{
 		if (context.HasErrors) return false;
 		if (script.tasks==null) return context.SetError(false, $"{script.id}: No tasks in script");
-		if (string.IsNullOrEmpty(options.InputPath)) return context.SetError(false, "Data path is not defined");
+		if (string.IsNullOrEmpty(options.inputPath)) return context.SetError(false, "Data path is not defined");
 		foreach (RestTaskJson task in script.tasks)
 		{
-			if (task.body != null) task.hasData = loadDataFile(context, options.InputPath, task.body+".json", "data");
+			if (task.body != null) task.hasData = loadDataFile(context, options.inputPath, task.body+".json", "data");
 			if (task.assert != null)
 			{
 				if (task.assert.schema != null) 
-					task.hasSchema = loadDataFile(context, options.SchemaPath, task.assert.schema+".json", "schema");
+					task.hasSchema = loadDataFile(context, options.schemaPath, "schema-"+task.assert.schema+".json", "schema");
 				if (task.assert.isEmpty()) return context.SetError(false, $"Task '{script.id}:{task.id}' assert is empty");	
 			}
 			if (task.x509 != null)
 			{
 				if (string.IsNullOrEmpty(task.x509.file)) return context.SetError(false, $"Task '{script.id}:{task.id}' x509 file is empty");
-				task.hasCertificate = loadDataFile(context, options.InputPath, task.x509.file, "certificate");
+				task.hasCertificate = loadDataFile(context, options.inputPath, task.x509.file, "certificate");
 			}
 		}
 
@@ -165,10 +162,8 @@ public class RestaScriptValidator
 	
 	#endregion
 
-	
 	#region Validate Scripts
 
-	
 	public RunBook ValidateScripts(ProcessContext context)
 	{
 		var res = new RunBook();
@@ -184,14 +179,14 @@ public class RestaScriptValidator
 		res.environment = new RestEnvironment(_envData);
 		foreach (var script in _scripts)
 		{
-			ValidateScript(context, script);
+			validateScript(context, script);
 			if (context.HasErrors) break;
 			res.scripts.Add(new RestScript(script));
 		}
 		return res;
 	}
-	
-	public bool ValidateScript(ProcessContext context, RestScriptJson script)
+
+	private bool validateScript(ProcessContext context, RestScriptJson script)
 	{
 		if (context.HasErrors) return false;
 		if (string.IsNullOrEmpty(script.id)) return context.SetError(false, $"Runbook script '{script.name}': id is missing");
@@ -199,15 +194,12 @@ public class RestaScriptValidator
 		if (script.tasks == null) return context.SetError(false, $"Script '{script.id}': tasks are missing");
 		foreach (var task in script.tasks)
 		{
-			ValidateTask(context, script.id, task);
+			validateTask(context, script.id, task);
 		}
-		
-
-		
 		return true;
 	}
-	
-	public bool ValidateTask(ProcessContext context, string sid, RestTaskJson task)
+
+	private bool validateTask(ProcessContext context, string sid, RestTaskJson task)
 	{
 		if (context.HasErrors) return false;
 		if (task.disabled) return true;

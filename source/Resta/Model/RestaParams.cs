@@ -9,17 +9,17 @@ namespace Resta.Model
 {
 	public class RestaParams
 	{
-		public bool NeedHelp = false;
-		public string Cmd = "";
-		public string BookName = "";
-		public string ScriptPath = "";
-		public string OutputPath = "";
-		public string InputPath = "";
-		public string SchemaPath = "";
-		public string EnvironmentName = "";
-		public bool KeepSuccess = false;
-		public bool Verbose = false;
-		public bool ResponseHeader = false;
-		public bool FailFast = false;
+		public bool needHelp = false;
+		public string cmd = "";
+		public string bookName = "";
+		public string scriptPath = "";
+		public string outputPath = "";
+		public string inputPath = "";
+		public string schemaPath = "";
+		public string environmentName = "";
+		public bool keepSuccess = false;
+		public bool verbose = false;
+		public bool responseHeader = false;
+		public bool failFast = false;
 	}
 }

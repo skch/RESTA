@@ -5,24 +5,24 @@
 This is a free software (MIT license) */
 #endregion
 
-using System;
-using System.Collections.Generic;
-
 namespace Resta.Model
 {
 	public class RestEnvironment
 	{
+		public string id;
 		public string title;
 		public readonly Dictionary<string, string> values = new Dictionary<string, string>();
 		private readonly Random _randomEngine = new Random();
 		
 		public RestEnvironment()
 		{
+			id = "nan";
 			title = "Undefined Environment";
 		}
 
 		public RestEnvironment(RestEnvironmentJson data)
 		{
+			id = data.id ?? string.Empty;
 			title = data.title ?? string.Empty;
 			if (data.values != null) values = data.values;
 		}

@@ -5,8 +5,6 @@
 This is a free software (MIT license) */
 #endregion
 
-using System.Collections.Generic;
-
 namespace Resta.Model
 {
 	public class RestTask

@@ -5,25 +5,24 @@
 This is a free software (MIT license) */
 #endregion
 
-using Newtonsoft.Json;
 using Resta.Domain;
 using Resta.Model;
 
 namespace Resta
 {
-	class Program
+	static class Program
 	{
 	
-		static string AppVersion = "1.1.14";
+		static string AppVersion = "1.2.01";
 		static void Main(string[] args)
 		{
 			FluentConsole
 				.Text("REST API Automated Testing").Cyan.Line(" v"+AppVersion);
 			var context = new ProcessContext();
 			var cparams = getProcessParams(context, args);
-			if (cparams.NeedHelp)
+			if (cparams.needHelp)
 			{
-				help(cparams.Cmd); return;
+				help(cparams.cmd); return;
 			}
 
 			Console.WriteLine("Loading scripts...");
@@ -31,10 +30,8 @@ namespace Resta
 			dataValidator.LoadRunbook(context, cparams);
 			var runbook = dataValidator.ValidateScripts(context);
 
-			//var bookData = loadRunBook(context, cparams);
 			var book = new RestApiBook();
 			var start = DateTime.Now;
-			//book.Execute(context, cparams.EnvironmentName, cparams, runbook);
 			book.Execute(context, cparams, runbook);
 			var time = DateTime.Now - start;
 			
@@ -52,32 +49,13 @@ namespace Resta
 		}
 		
 		//--------------------------------------------------
-		static RunBook loadRunBook(ProcessContext context, RestaParams cparams)
-		{
-			RunBook res = new RunBook();
-			if (context.HasErrors) return res;
-			if (!File.Exists(cparams.BookName)) return context.SetError<RunBook>(res, "Cannot find runbook file");
-			try
-			{
-				string json = File.ReadAllText(cparams.BookName);
-				var book = JsonConvert.DeserializeObject<RunBook>(json);
-				return book ?? context.SetError(res, "Cannot read runbook JSON");
-			}
-			catch (Exception ex)
-			{
-				return context.SetError<RunBook>(res, "Load Runbook", ex);
-			}
-			
-		}
-		
-		//--------------------------------------------------
 		static RestaParams getProcessParams(ProcessContext context, string[] args)
 		{
 			var res = new RestaParams();
 			if (context.HasErrors) return res;
 			if (args.Length == 0)
 			{
-				res.NeedHelp = true;
+				res.needHelp = true;
 				return res;
 			}
 
@@ -90,24 +68,24 @@ namespace Resta
 					(string key, string value) = splitCmdOption(pair);
 					switch (key.ToLower())
 					{
-						case "env": res.EnvironmentName = value; break;
-						case "sc": res.SchemaPath = value; break;
-						case "out": res.OutputPath = value; break;
-						case "in": res.InputPath = value; break;
-						case "keep": res.KeepSuccess = true; break;
-						case "debug": res.Verbose = true; break;
-						case "rh": res.ResponseHeader = true; break;
-						case "ff": res.FailFast = true; break;
-						default: res.NeedHelp = true; break;
+						case "env": res.environmentName = value; break;
+						case "sc": res.schemaPath = value; break;
+						case "out": res.outputPath = value; break;
+						case "in": res.inputPath = value; break;
+						case "keep": res.keepSuccess = true; break;
+						case "debug": res.verbose = true; break;
+						case "rh": res.responseHeader = true; break;
+						case "ff": res.failFast = true; break;
+						default: res.needHelp = true; break;
 					}
 				}
 				else
 				{
-					res.BookName = cp;
+					res.bookName = cp;
 				}
 
-				var scriptPath = Path.GetDirectoryName(res.BookName);
-				res.ScriptPath = (string.IsNullOrEmpty(scriptPath)) ? "": scriptPath;
+				var scriptPath = Path.GetDirectoryName(res.bookName);
+				res.scriptPath = (string.IsNullOrEmpty(scriptPath)) ? "": scriptPath;
 			}
 			return res;
 		}
