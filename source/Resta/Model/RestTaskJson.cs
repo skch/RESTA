@@ -5,8 +5,11 @@
 This is a free software (MIT license) */
 #endregion
 
+using Newtonsoft.Json;
+
 namespace Resta.Model;
 
+[JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
 public class RestTaskJson
 {
 	public string? id;

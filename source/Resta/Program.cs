@@ -24,28 +24,38 @@ namespace Resta
 			{
 				help(cparams.cmd); return;
 			}
-
-			Console.WriteLine("Loading scripts...");
-			var dataValidator = new RestaScriptValidator();
-			dataValidator.LoadRunbook(context, cparams);
-			var runbook = dataValidator.ValidateScripts(context);
-
-			var book = new RestApiBook();
-			var start = DateTime.Now;
-			book.Execute(context, cparams, runbook);
-			var time = DateTime.Now - start;
 			
-			Console.WriteLine();
-			FluentConsole
-				.Text("API Test ")
-				.With(c => !context.HasErrors ? c.Green : c.Red)
-				.Line(!context.HasErrors ? "Completed" : "Failed");
+			if (cparams.createNewBook)
+			{
+				var scriptBuilder = new ScriptBuilder();
+				scriptBuilder.buildRunbook(context, cparams);
+
+			} else
+			{
 				
+				Console.WriteLine("Loading scripts...");
+				var dataValidator = new RestaScriptValidator();
+				dataValidator.LoadRunbook(context, cparams);
+				var runbook = dataValidator.ValidateScripts(context);
+
+				var book = new RestApiBook();
+				var start = DateTime.Now;
+				book.Execute(context, cparams, runbook);
+				var time = DateTime.Now - start;
+			
+				Console.WriteLine();
+				FluentConsole
+					.Text("API Test ")
+					.With(c => !context.HasErrors ? c.Green : c.Red)
+					.Line(!context.HasErrors ? "Completed" : "Failed");
+				
+				Console.WriteLine("Total Duration: {0}", time);
+			}
+
 			if (context.HasErrors)
 			{
 				Console.WriteLine(context.ErrorMessage);
 			}
-			Console.WriteLine("Total Duration: {0}", time);
 		}
 		
 		//--------------------------------------------------
@@ -76,6 +86,7 @@ namespace Resta
 						case "debug": res.verbose = true; break;
 						case "rh": res.responseHeader = true; break;
 						case "ff": res.failFast = true; break;
+						case "new": res.createNewBook = true; break;
 						default: res.needHelp = true; break;
 					}
 				}

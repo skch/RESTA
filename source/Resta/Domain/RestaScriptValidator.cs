@@ -131,7 +131,7 @@ public class RestaScriptValidator
 	{
 		if (context.HasErrors) return false;
 		if (script.tasks==null) return context.SetError(false, $"{script.id}: No tasks in script");
-		if (string.IsNullOrEmpty(options.inputPath)) return context.SetError(false, "Data path is not defined");
+		//if (string.IsNullOrEmpty(options.inputPath)) return context.SetError(false, "Data path is not defined");
 		foreach (RestTaskJson task in script.tasks)
 		{
 			if (task.body != null) task.hasData = loadDataFile(context, options.inputPath, task.body+".json", "data");

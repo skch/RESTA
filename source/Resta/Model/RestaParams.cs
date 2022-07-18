@@ -21,5 +21,6 @@ namespace Resta.Model
 		public bool verbose = false;
 		public bool responseHeader = false;
 		public bool failFast = false;
+		public bool createNewBook = false;
 	}
 }
