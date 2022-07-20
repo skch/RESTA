@@ -63,6 +63,7 @@ namespace Resta.Domain
 		{
 			var res = new ApiCallReport();
 			if (context.HasErrors) return res;
+			beforeTask(context, task);
 			Console.Write("  - {0}:", task.title);
 			initiateReport(context, res, env, script, task);
 			var client = createRestClient(context, task);
@@ -296,6 +297,17 @@ namespace Resta.Domain
 		#endregion
 
 		#region After the call
+		
+		//--------------------------------------------------
+		private bool beforeTask(ProcessContext context, RestTask task)
+		{
+			if (context.HasErrors) return false;
+			if (task.wait == 0) return true;
+			Console.Write("  - waiting {0} ms", task.wait);
+			Thread.Sleep(task.wait);
+			Console.WriteLine();
+			return true;
+		}
 		
 		//--------------------------------------------------
 		private void updateReport(ProcessContext context, ApiCallReport res, IRestResponse? response)

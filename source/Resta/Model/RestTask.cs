@@ -20,6 +20,7 @@ namespace Resta.Model
 		public Dictionary<string, string> header = new Dictionary<string, string>();
 		public ApiAssert? assert;
 		public List<ApiRead> read = new List<ApiRead>();
+		public int wait = 0;
 
 		internal string scheme = "";//****
 		internal string? basepath;//****
@@ -33,6 +34,7 @@ namespace Resta.Model
 			url = data.url ?? string.Empty;
 			body = data.body ?? string.Empty;
 			method = data.method ?? "GET";
+			wait = data.wait ?? 0;
 			if (data.timeout != null) timeout = (int)data.timeout;
 			if (data.assert != null) assert = data.assert;
 			if (data.read != null)

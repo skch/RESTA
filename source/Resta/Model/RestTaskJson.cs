@@ -24,6 +24,7 @@ public class RestTaskJson
 	public Dictionary<string, string>? header;
 	public ApiAssert? assert;
 	public ApiReadJson[]? read;
+	public int? wait;
 	
 	internal bool hasData;
 	internal bool hasSchema;

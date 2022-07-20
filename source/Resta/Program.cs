@@ -125,6 +125,7 @@ namespace Resta
 					Console.WriteLine("resta runbook {options}");
 					Console.WriteLine("");
 					Console.WriteLine("Options:");
+					Console.WriteLine(" -new          Generate sample runbook and scripts");
 					Console.WriteLine(" -in:{path}    Define Path for input data");
 					Console.WriteLine(" -out:{path}   Define Path to output the results");
 					Console.WriteLine(" -sc:{path}    Define Path for schemas");

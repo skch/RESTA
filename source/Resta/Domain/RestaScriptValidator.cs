@@ -120,20 +120,25 @@ public class RestaScriptValidator
 		if (_bookData.scripts==null) return context.SetError(false, "No scripts in the runbook");
 		foreach (RestScriptJson script in _scripts)
 		{
-			loadScriptData(context, script, options);
+			reviewTasks(context, script, options);
 		}
 
 		return true;
 	}
 	
 	//--------------------------------------------------
-	private bool loadScriptData(ProcessContext context, RestScriptJson script, RestaParams options)
+	private bool reviewTasks(ProcessContext context, RestScriptJson script, RestaParams options)
 	{
 		if (context.HasErrors) return false;
 		if (script.tasks==null) return context.SetError(false, $"{script.id}: No tasks in script");
 		//if (string.IsNullOrEmpty(options.inputPath)) return context.SetError(false, "Data path is not defined");
 		foreach (RestTaskJson task in script.tasks)
 		{
+			if (task.wait != null)
+			{
+				if (task.wait < 0) return context.SetError(false, $"Task '{script.id}:{task.id}' negative wait time");
+				if (task.wait > 60000) return context.SetError(false, $"Task '{script.id}:{task.id}' wait time is too large");
+			}
 			if (task.body != null) task.hasData = loadDataFile(context, options.inputPath, task.body+".json", "data");
 			if (task.assert != null)
 			{

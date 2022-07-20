@@ -21,8 +21,7 @@ public class ScriptBuilder
 		createData(context);
 		createScript(context);
 		createCommand(context);
-		if (!context.HasErrors)
-		Console.WriteLine($"Runbook {cparams.bookName} generated.");
+		if (!context.HasErrors) Console.WriteLine($"Runbook {cparams.bookName} generated.");
 		return true;
 	}
 	

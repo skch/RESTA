@@ -119,6 +119,7 @@ Every task in the **tasks** array represents a single REST API call. Here is the
 	"method": "GET|POST|PUT|DELETE",
 	"url": "{full-path-of-the-api}",
   "timeout": {timeout},
+  "wait": {pause},
   "header": {},
   "body": {}
 	...segments...
@@ -133,6 +134,7 @@ Here are the primary properties of the task object:
 * The `method` property indicates the HTTP method of the request. RESTA supports GET, POST, PUT, and DELETE.
 * The `url` property contains the URL of the API request.
 * The `timeout` property specify the call time-out in milliseconds. The default time-out is 5 seconds.
+* The `wait` property sets a delay in milliseconds. If more than zero, the script will pause before executing this task. Maximum value is 60 seconds.
 * The `header` property is optional. It contains key-value pairs that RESTA will add to the HTTP header of the API request.
 * The `body` property is used for the POST and PUT methods. It contains the name of the file in the data directory. RESTA will send the content of this file in the HTTP body of the API request.
 * A task may also include one of the following segments: *assert*, *x509*, and *read*. You will find more details below.
