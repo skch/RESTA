@@ -9,6 +9,13 @@ A simple command-line tool for automated testing of RESTfull APIs
 
 ### History of changes:
 
+**Jul, 2022: Release 1.2**
+
+* Converted to .NET 6 and C# 10
+* Improved validations and error messages
+* Added task delay feature
+* User can generate new runbook with sample script
+
 **Oct, 2021: Release 1.1**
 
 - Added certificates
