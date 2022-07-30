@@ -96,8 +96,8 @@ namespace Resta.Domain
 				verbose($"Task path {task.urlpath}");
 
 				report.scriptid = script.id;
-				report.title = script.title;
-				report.taskid = script.id;
+				report.title = task.title;
+				report.taskid = task.id;
 				report.url = task.method+" "+path;
 				report.time = DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss");
 				return true;
