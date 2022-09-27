@@ -216,9 +216,14 @@ public class RestaScriptValidator
 		task.method = task.method.ToUpper();	
 		switch (task.method)
 		{
+			case "HEAD":
 			case "GET":
+			case "OPTIONS":
 			case "DELETE": break;
+			case "COPY":
 			case "POST":
+			case "MERGE":
+			case "PATCH":
 			case "PUT":
 				if (string.IsNullOrEmpty(task.body)) 
 					return context.SetError(false, $"Task {sid}/{task.id}: missing body");

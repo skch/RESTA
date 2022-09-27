@@ -131,13 +131,15 @@ Here are the primary properties of the task object:
 * The `id` property is a unique ID of the task in the script.
 * The `title` property is a text that is displayed on the screen and in the test report.
 * The `disabled` property is a flag that can be used to skip some tasks during script execution.
-* The `method` property indicates the HTTP method of the request. RESTA supports GET, POST, PUT, and DELETE.
+* The `method` property indicates the HTTP method of the request. RESTA supports [GET](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET), [POST](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST), [PUT](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PUT), [DELETE](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/DELETE), [HEAD](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/HEAD), [OPTIONS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS), [PATCH](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/PATCH), MERGE, and COPY .   
 * The `url` property contains the URL of the API request.
 * The `timeout` property specify the call time-out in milliseconds. The default time-out is 5 seconds.
 * The `wait` property sets a delay in milliseconds. If more than zero, the script will pause before executing this task. Maximum value is 60 seconds.
 * The `header` property is optional. It contains key-value pairs that RESTA will add to the HTTP header of the API request.
 * The `body` property is used for the POST and PUT methods. It contains the name of the file in the data directory. RESTA will send the content of this file in the HTTP body of the API request.
 * A task may also include one of the following segments: *assert*, *x509*, and *read*. You will find more details below.
+
+
 
 Here is an example of the script task:
 

@@ -13,7 +13,7 @@ namespace Resta
 	static class Program
 	{
 	
-		static string AppVersion = "1.2.02";
+		static string AppVersion = "1.2.03";
 		static void Main(string[] args)
 		{
 			FluentConsole
@@ -22,7 +22,7 @@ namespace Resta
 			var cparams = getProcessParams(context, args);
 			if (cparams.needHelp)
 			{
-				help(cparams.cmd); return;
+				help(); return;
 			}
 			
 			if (cparams.createNewBook)
@@ -111,32 +111,20 @@ namespace Resta
 		}
 
 		//--------------------------------------------------
-		static void help(string command)
+		static void help()
 		{
-
-			switch (command)
-			{
-				case "b":
-					Console.WriteLine("");
-					break;
-					
-				default:
-					Console.WriteLine("USAGE:");
-					Console.WriteLine("resta runbook {options}");
-					Console.WriteLine("");
-					Console.WriteLine("Options:");
-					Console.WriteLine(" -new          Generate sample runbook and scripts");
-					Console.WriteLine(" -in:{path}    Define Path for input data");
-					Console.WriteLine(" -out:{path}   Define Path to output the results");
-					Console.WriteLine(" -sc:{path}    Define Path for schemas");
-					Console.WriteLine(" -keep         Save the result even when passed the test");
-					Console.WriteLine(" -rh           Include response header");
-					Console.WriteLine(" -ff           Stop script execution after first error");
-					break;
-			}
+			Console.WriteLine("USAGE:");
+			Console.WriteLine("resta runbook {options}");
+			Console.WriteLine("");
+			Console.WriteLine("Options:");
+			Console.WriteLine(" -new          Generate sample runbook and scripts");
+			Console.WriteLine(" -in:{path}    Define Path for input data");
+			Console.WriteLine(" -out:{path}   Define Path to output the results");
+			Console.WriteLine(" -sc:{path}    Define Path for schemas");
+			Console.WriteLine(" -keep         Save the result even when passed the test");
+			Console.WriteLine(" -rh           Include response header");
+			Console.WriteLine(" -ff           Stop script execution after first error");
 			
-
-		
 		}
 	}
 }

@@ -10,7 +10,6 @@ namespace Resta.Model
 	public class RestaParams
 	{
 		public bool needHelp = false;
-		public string cmd = "";
 		public string bookName = "";
 		public string scriptPath = "";
 		public string outputPath = "";
