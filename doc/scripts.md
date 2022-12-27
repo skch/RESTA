@@ -64,7 +64,7 @@ Since version 1.1.12 RESTA also supports the following dynamic variables:
 
 ### Schemas
 
-File name `shema-{name}.json`. For example, `schema-object.json` is the environment file you are referring to as “object”.
+File name `shema-{name}.json`. For example, `schema-object.json` is the schema file you are referring to as “object”.
 
 ```json
 {
@@ -73,7 +73,7 @@ File name `shema-{name}.json`. For example, `schema-object.json` is the environm
 }
 ```
 
-You can create as many environments as you like.
+You can create as many schema files as you like. You do not need to create file for default schemas `object` and `array`.
 
 
 

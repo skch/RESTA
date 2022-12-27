@@ -14,8 +14,15 @@ public class RestaScriptValidator
 	public bool LoadRunbook(ProcessContext context, RestaParams options)
 	{
 		if (context.HasErrors) return false;
-		if (string.IsNullOrEmpty(options.bookName)) return context.SetError(false, "Runbook name is missing");
-		_bookData = loadRunbookFile(context, options.bookName);
+		if (options.isScript)
+		{
+			if (string.IsNullOrEmpty(options.bookName)) return context.SetError(false, "Script name is missing");
+			_bookData = loadVirtualRunbookFile(context, options.bookName);
+		} else
+		{
+			if (string.IsNullOrEmpty(options.bookName)) return context.SetError(false, "Runbook name is missing");
+			_bookData = loadRunbookFile(context, options.bookName);
+		}
 		setupEnvironment(context, options);
 		loadRunbookScripts(context, options);
 		return loadScriptsData(context, options);
@@ -37,12 +44,30 @@ public class RestaScriptValidator
 	private RunbookJson? loadRunbookFile(ProcessContext context, string bookName)
 	{
 		if (context.HasErrors) return null;
+		
 		if (!File.Exists(bookName)) return context.SetErrorNull<RunbookJson>( "Cannot find runbook file");
 		try
 		{
 			string json = File.ReadAllText(bookName);
 			var book = JsonConvert.DeserializeObject<RunbookJson>(json);
 			return book ?? context.SetErrorNull<RunbookJson>("Cannot read runbook JSON");
+		}
+		catch (Exception ex)
+		{
+			return context.SetErrorNull<RunbookJson>("Load Runbook", ex);
+		}
+			
+	}
+	
+	//--------------------------------------------------
+	private RunbookJson? loadVirtualRunbookFile(ProcessContext context, string scriptName)
+	{
+		if (context.HasErrors) return null;
+		try
+		{
+			string json = "{\"title\": \"Single script\",\"scripts\": [\""+scriptName+"\"]}";
+			var book = JsonConvert.DeserializeObject<RunbookJson>(json);
+			return book ?? context.SetErrorNull<RunbookJson>("Cannot parse runbook JSON");
 		}
 		catch (Exception ex)
 		{

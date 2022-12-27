@@ -20,6 +20,7 @@ namespace Resta.Model
 		public bool verbose = false;
 		public bool responseHeader = false;
 		public bool failFast = false;
+		public bool isScript = false;
 		public bool createNewBook = false;
 	}
 }

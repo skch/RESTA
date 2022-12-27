@@ -9,6 +9,12 @@ A simple command-line tool for automated testing of RESTfull APIs
 
 ### History of changes:
 
+**Dec, 2022: Release 1.2.05**
+
+* No longer need to create files for default schemas `object` and `array`.
+* No need to create a runbook if you run one script. Can specify the script name in the command.
+* 
+
 **Jul, 2022: Release 1.2**
 
 * Converted to .NET 6 and C# 10
