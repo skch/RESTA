@@ -142,8 +142,19 @@ public class RestaScriptValidator
 			if (task.body != null) task.hasData = loadDataFile(context, options.inputPath, task.body+".json", "data");
 			if (task.assert != null)
 			{
-				if (task.assert.schema != null) 
-					task.hasSchema = loadDataFile(context, options.schemaPath, "schema-"+task.assert.schema+".json", "schema");
+				if (task.assert.schema != null)
+				{
+					switch (task.assert.schema.ToLower())
+					{
+						case "object":
+						case "array":
+							task.hasSchema = true;
+							break;
+						default:
+							task.hasSchema = loadDataFile(context, options.schemaPath, "schema-"+task.assert.schema+".json", "schema");
+							break;
+					}
+				}
 				if (task.assert.isEmpty()) return context.SetError(false, $"Task '{script.id}:{task.id}' assert is empty");	
 			}
 			if (task.x509 != null)

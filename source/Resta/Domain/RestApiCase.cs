@@ -430,9 +430,8 @@ namespace Resta.Domain
 
 						if (task.assert.schema != null)
 						{
-							string fname = Path.Combine(schemaPath, "schema-"+task.assert.schema + ".json");
-							if (!File.Exists(fname)) return context.SetError(false, "Schema not found " + task.assert.schema);
-							validateJsonSchema(fname, report);
+							var schema = obtainJsonSchema(context, task.assert.schema);
+							validateJsonSchema(context, schema, report);
 						}
 					}
 				}
@@ -443,6 +442,26 @@ namespace Resta.Domain
 			catch (Exception ex)
 			{
 				return context.SetError(false, "Cannot validate response", ex);
+			}
+		}
+		
+		//--------------------------------------------------
+		private string obtainJsonSchema(ProcessContext context, string schemaName)
+		{
+			if (context.HasErrors) return "";
+			switch (schemaName.ToLower()) 
+			{
+				case "object": return "{ \"type\": \"object\" }";
+				case "array": return "{ \"type\": \"array\" }";
+			}
+			string fname = Path.Combine(schemaPath, "schema-"+schemaName + ".json");
+			if (!File.Exists(fname)) return context.SetError("", "Schema not found " + schemaName);
+			try
+			{
+				return File.ReadAllText(fname);
+			} catch (Exception ex)
+			{
+				return context.SetError("", "Cannot read schema file", ex);
 			}
 		}
 		
@@ -503,14 +522,13 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private void validateJsonSchema(string fschema, ApiCallReport res)
+		private void validateJsonSchema(ProcessContext context, string schemaJson, ApiCallReport res)
 		{
+			if (context.HasErrors) return;
 			if (res.warnings.Count > 0) return;
 			try
 			{
-				string schemaJson = File.ReadAllText(fschema);
 				JSchema schema = JSchema.Parse(schemaJson);
-
 				var response = (JToken?) res.response;
 				if (response == null)
 				{

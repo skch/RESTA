@@ -38,7 +38,7 @@ public class ScriptBuilder
 				scripts = new string[] { "crud" }
 			};
 			var jtext = JsonConvert.SerializeObject(data, Formatting.Indented);
-			File.WriteAllText(fname, jtext); 
+			File.WriteAllText(fname+".json", jtext); 
 			return true;
 		} catch (Exception ex)
 		{
@@ -77,6 +77,8 @@ public class ScriptBuilder
 		{
 			string spath = Path.Combine(root, "schema");
 			if (!Directory.Exists(spath)) Directory.CreateDirectory(spath);
+			
+			/* No need to generate default
 			string fname = Path.Combine(spath, "schema-object.json");
 			var data = new SchemaJson { description = "Any Object", type = "object" };
 			var jtext = JsonConvert.SerializeObject(data, Formatting.Indented);
@@ -85,6 +87,7 @@ public class ScriptBuilder
 			data = new SchemaJson { description = "Any Array", type = "array" };
 			jtext = JsonConvert.SerializeObject(data, Formatting.Indented);
 			File.WriteAllText(fname, jtext);
+			*/
 			return true;
 		} catch (Exception ex)
 		{

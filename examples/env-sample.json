@@ -1,7 +1,9 @@
 {
+  "id": "sample",
   "title": "Sample environment",
-	"values": {
-		"url": "http://dummy.restapiexample.com/api",
-		"eid": "71884"
-	}
+  "values": {
+    "url": "http://dummy.restapiexample.com/api",
+    "eid": "71884",
+    "employee": "1"
+  }
 }
