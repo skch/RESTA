@@ -172,7 +172,16 @@ namespace Resta.Domain
 				addToHeader(env, res, task.header);
 				setRequestHeader(request, res);
 				res.input = null;
-				if (!string.IsNullOrEmpty(task.body)) res.input = addRequestBody(res, env, request, task.body);
+
+				string jbody = "";
+				string ext = ".json";
+				
+				if (!string.IsNullOrEmpty(task.body))
+				{
+					(ext,jbody) = readContentFromFile(res, env, request, task.body);
+				}
+				if (task.content!=null) jbody = readContent(res, env, request, task.content);
+				if (!string.IsNullOrEmpty(jbody)) res.input = addRequestBody(res, env, request, ext, jbody);
 				request.Timeout = 5000;
 				if (script.shared?.timeout != null) request.Timeout = (int)script.shared.timeout;
 				if (task.timeout != 0) request.Timeout = (int)task.timeout;
@@ -250,9 +259,86 @@ namespace Resta.Domain
 			foreach (var key in res.header.Keys)
 				request.AddHeader(key, res.header[key]);
 		}
+		
+		//--------------------------------------------------
+		private object? addRequestBody(ApiCallReport res,  RestEnvironment? env, RestRequest? request, string ext, string jbody)
+		{
+			if (request == null) return null;
+			try
+			{
+				string rbody = mustache(jbody, env);
+				switch (ext)
+				{
+					case ".json":
+						var data = JsonConvert.DeserializeObject(rbody);
+						request.RequestFormat = DataFormat.Json;
+						request.AddJsonBody(rbody);
+						return data;
+						
+					case ".xml":
+						request.RequestFormat = DataFormat.Xml;
+						request.AddXmlBody(rbody);
+						return new XmlInput(rbody);
+						
+					default:
+						res.warnings.Add("Unsupported type: "+ext);
+						return null;
+				}
+
+			}
+			catch (Exception ex)
+			{
+				res.warnings.Add("Cannot process request body. "+ex.Message);
+				return null;
+			}
+		}
+
 
 		//--------------------------------------------------
-		private object? addRequestBody(ApiCallReport res,  RestEnvironment? env, RestRequest? request, string fname)
+		private (string, string) readContentFromFile(ApiCallReport res,  RestEnvironment? env, RestRequest? request, string fname)
+		{
+			var empty = ("", "");
+			if (request == null) return empty;
+			try
+			{
+				string fullname = Path.Combine(inputPath, fname);
+				verbose($"Reading data {fname}");
+				if (!File.Exists(fullname))
+					fullname = Path.Combine(inputPath, fname + ".json");
+				if (!File.Exists(fullname))
+				{
+					res.warnings.Add("Cannot find body file: "+fullname);
+					return empty;
+				}
+				string ext = Path.GetExtension(fullname).ToLower();
+				string jdata = File.ReadAllText(fullname);
+				return (ext, jdata);
+			}
+			catch (Exception ex)
+			{
+				res.warnings.Add("Cannot read request body "+fname+". "+ex.Message);
+				return empty;
+			}
+		}
+
+		//--------------------------------------------------
+		private string readContent(ApiCallReport res,  RestEnvironment? env, RestRequest? request, dynamic content)
+		{
+			if (request == null) return "";
+			try
+			{
+				return JsonConvert.SerializeObject(content);
+			}
+			catch (Exception ex)
+			{
+				res.warnings.Add("Cannot parse request content. "+ex.Message);
+				return "";
+			}
+		}
+
+
+		//--------------------------------------------------
+		private object? addRequestBody1(ApiCallReport res,  RestEnvironment? env, RestRequest? request, string fname)
 		{
 			if (request == null) return null;
 			try

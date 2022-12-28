@@ -17,6 +17,7 @@ namespace Resta.Model
 		public CertificateSettings? x509;
 		public string url;
 		public string body;
+		public dynamic? content;
 		public Dictionary<string, string> header = new Dictionary<string, string>();
 		public ApiAssert? assert;
 		public List<ApiRead> read = new List<ApiRead>();
@@ -33,6 +34,7 @@ namespace Resta.Model
 			description = data.description ?? string.Empty;
 			url = data.url ?? string.Empty;
 			body = data.body ?? string.Empty;
+			content = data.content ?? null;
 			method = data.method ?? "GET";
 			wait = data.wait ?? 0;
 			if (data.timeout != null) timeout = (int)data.timeout;

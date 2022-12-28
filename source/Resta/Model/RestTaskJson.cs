@@ -21,6 +21,7 @@ public class RestTaskJson
 	public CertificateSettingsJson? x509; 
 	public string? url;
 	public string? body;
+	public dynamic? content;
 	public Dictionary<string, string>? header;
 	public ApiAssert? assert;
 	public ApiReadJson[]? read;

@@ -4,6 +4,7 @@
   "values": {
     "url": "http://dummy.restapiexample.com/api",
     "eid": "71884",
-    "employee": "1"
+    "employee": "1",
+    "member1Public": "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQARPHqJr1JpkElivuRq6kdeAkTLQ5PqtXZMrUpzjtN2SBqGIU-QbmmWygOkTmQunsakvaFQUW4q91ZLDum2rUAwacAEOQWorrssfMUpHEC_q3jI_rk_Ifom8Lz7TnymoBn2dXbIS1xIWpzbHsnTk4-2XJxK652HKgmEgZhfS3Up1J4d2Q="
   }
 }

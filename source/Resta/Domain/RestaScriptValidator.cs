@@ -261,7 +261,7 @@ public class RestaScriptValidator
 			case "MERGE":
 			case "PATCH":
 			case "PUT":
-				if (string.IsNullOrEmpty(task.body)) 
+				if (string.IsNullOrEmpty(task.body) && task.content==null) 
 					return context.SetError(false, $"Task {sid}/{task.id}: missing body");
 				break;
 			default: 	return context.SetError(false, $"Task {sid}/{task.id}: unsupported method");
