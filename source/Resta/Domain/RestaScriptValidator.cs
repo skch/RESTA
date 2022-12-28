@@ -164,7 +164,10 @@ public class RestaScriptValidator
 				if (task.wait < 0) return context.SetError(false, $"Task '{script.id}:{task.id}' negative wait time");
 				if (task.wait > 60000) return context.SetError(false, $"Task '{script.id}:{task.id}' wait time is too large");
 			}
-			if (task.body != null) task.hasData = loadDataFile(context, options.inputPath, task.body+".json", "data");
+			if (task.content != null && task.body != null)
+				context.SetError(false, $"Cannot use body and content in the same task.");
+			if (task.body != null) 
+				task.hasData = loadDataFile(context, options.inputPath, task.body+".json", "data");
 			if (task.assert != null)
 			{
 				if (task.assert.schema != null)

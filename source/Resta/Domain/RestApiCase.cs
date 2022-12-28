@@ -177,9 +177,8 @@ namespace Resta.Domain
 				string ext = ".json";
 				
 				if (!string.IsNullOrEmpty(task.body))
-				{
 					(ext,jbody) = readContentFromFile(res, env, request, task.body);
-				}
+				
 				if (task.content!=null) jbody = readContent(res, env, request, task.content);
 				if (!string.IsNullOrEmpty(jbody)) res.input = addRequestBody(res, env, request, ext, jbody);
 				request.Timeout = 5000;
