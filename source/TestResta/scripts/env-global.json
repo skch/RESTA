@@ -1,0 +1,7 @@
+{
+  "id": "global",
+  "title": "Env Test",
+  "values": {
+    "key": "value"
+  }
+}

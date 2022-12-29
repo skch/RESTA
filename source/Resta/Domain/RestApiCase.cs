@@ -66,9 +66,9 @@ namespace Resta.Domain
 			beforeTask(context, task);
 			Console.Write("  - {0}:", task.title);
 			initiateReport(context, res, env, script, task);
-			var client = createRestClient(context, task);
-			ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
-			if (task.x509 != null) setClientCertificate(context, client, task, res);
+			var client = createRestClient(context, task, res);
+			//ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+			//if (task.x509 != null) setClientCertificate(context, client, task, res);
 			
 			var request = prepareRequest(context, res, env, script, task);			
 			var response = makeRestCall(context, res, client, request);
@@ -108,17 +108,49 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private RestClient? createRestClient(ProcessContext context, RestTask task)
+		private RestClient? createRestClient(ProcessContext context, RestTask task, ApiCallReport res)
 		{
 			if (context.HasErrors) return null;
 			if (task.basepath == null) return context.SetErrorNull<RestClient>("Base Path is missing");
 			try
 			{
-				var client = new RestClient(task.basepath);
+				var options = new RestClientOptions {
+				  BaseUrl = new Uri(task.basepath),
+					RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
+				};
+				if (task.x509 != null)
+				{
+					Console.Write("🔑");
+					if (string.IsNullOrEmpty(task.x509?.file)) return context.SetErrorNull<RestClient>("Certificate file is missing");
+					var certificate = getClientCertificate(context, task.x509?.file, task.x509?.password);
+					if (certificate == null) return null;
+					options.ClientCertificates = new X509CertificateCollection() { certificate };
+					res.security = task.x509?.file;
+				}
+
+				var client = new RestClient(options);
 				return client;
 			} catch (Exception ex)
 			{
 				return context.SetErrorNull<RestClient>( "Create Rest Client", ex);
+			}
+		}
+		
+		
+		//--------------------------------------------------
+		private X509Certificate2? getClientCertificate(ProcessContext context, string? cfname, string? pass)
+		{
+			if (context.HasErrors) return null;
+			try
+			{
+				if (string.IsNullOrEmpty(cfname)) return context.SetErrorNull<X509Certificate2>("Certificate file name is missing");
+				var certFile = Path.Combine(inputPath, cfname);
+				verbose($"Reading certificate {certFile}");
+				if (!File.Exists(certFile)) return context.SetErrorNull<X509Certificate2>("Certificate file does not exist: "+certFile);
+				return new X509Certificate2(certFile, pass);
+			} catch (Exception ex)
+			{
+				return context.SetErrorNull<X509Certificate2>("Set Client Certificate", ex);
 			}
 		}
 
@@ -136,8 +168,9 @@ namespace Resta.Domain
 				if (!File.Exists(certFile)) return context.SetError(false, "Certificate file does not exist: "+certFile);
 				X509Certificate2 certificate = new X509Certificate2(certFile, task.x509.password);
 				
-				client.ClientCertificates = new X509CertificateCollection() { certificate };
-				client.Proxy = new WebProxy();		
+				var options = new RestClientOptions();
+				options.ClientCertificates = new X509CertificateCollection() { certificate };
+				//client.Proxy = new WebProxy();		
 				//ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;		
 				ServicePointManager.ServerCertificateValidationCallback += (s, cert, chain, sslPolicyErrors) => true;
 				res.security = task.x509.file;
@@ -153,13 +186,15 @@ namespace Resta.Domain
 		{
 			if (context.HasErrors) return null;
 			if (task.urlpath == null) return context.SetErrorNull<RestRequest>("Task Url is missing");
+			//Method method = Method.Get;
 			try
 			{
-				if (!Enum.TryParse(task.method, out RestSharp.Method method))
-				{
-					res.warnings.Add("Invalid method " + task.method);
-					return null;
-				}
+				var method = (Method)Enum.Parse(typeof(Method), task.method, true);
+				// if (!Enum.TryParse(task.method, out RestSharp.Method method, true))
+				// {
+				// 	res.warnings.Add("Invalid method " + task.method);
+				// 	return null;
+				// }
 				
 				if (task.scheme != "http://" && task.scheme != "https://")
 				{
@@ -188,6 +223,8 @@ namespace Resta.Domain
 				ServicePointManager.Expect100Continue = true;
 				ServicePointManager.DefaultConnectionLimit = 9999;
 				ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+				ServicePointManager.ServerCertificateValidationCallback += (s, cert, chain, sslPolicyErrors) => true;
+
 
 				return request;
 			}
@@ -200,14 +237,14 @@ namespace Resta.Domain
 		}
 
 		//--------------------------------------------------
-		private IRestResponse? makeRestCall(ProcessContext context, ApiCallReport res, RestClient? client, RestRequest? request)
+		private RestResponse? makeRestCall(ProcessContext context, ApiCallReport res, RestClient? client, RestRequest? request)
 		{
 			if (context.HasErrors) return null;
 			try
 			{
 				if (client == null || request == null) return null;
 				var start = DateTime.Now;
-				IRestResponse? response = client.Execute(request);
+				RestResponse? response = client.Execute(request);
 				var fd = DateTime.Now - start;
 				res.duration = (long)fd.TotalMilliseconds;
 				if (response.ErrorException != null)
@@ -217,7 +254,7 @@ namespace Resta.Domain
 				return response;
 			} catch (Exception ex)
 			{
-				return context.SetErrorNull<IRestResponse>( "Get HTTP Response", ex);
+				return context.SetErrorNull<RestResponse>( "Get HTTP Response", ex);
 			}
 			
 			
@@ -395,7 +432,7 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private void updateReport(ProcessContext context, ApiCallReport res, IRestResponse? response)
+		private void updateReport(ProcessContext context, ApiCallReport res, RestResponse? response)
 		{
 			if (context.HasErrors)
 			{
@@ -413,7 +450,7 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private bool readResponseHeader(ProcessContext context, ApiCallReport res, IRestResponse? response)
+		private bool readResponseHeader(ProcessContext context, ApiCallReport res, RestResponse? response)
 		{
 			if (context.HasErrors) return false;
 			if (response == null) return false;
@@ -421,6 +458,8 @@ namespace Resta.Domain
 			try
 			{
 				int cnt = 1;
+				res.type = "application/json";
+				if (response.Headers != null)
 				foreach (var rh in response.Headers)
 				{
 					if (rh.Name == null) continue;
@@ -454,7 +493,7 @@ namespace Resta.Domain
 		}
 		
 		//--------------------------------------------------
-		private bool readResponseContent(ProcessContext context, ApiCallReport res, IRestResponse? response)
+		private bool readResponseContent(ProcessContext context, ApiCallReport res, RestResponse? response)
 		{
 			if (context.HasErrors) return false;
 			if (response == null) return context.SetError(false, "readResponseContent:Missing response");

@@ -1,0 +1,25 @@
+{
+	"id": "test",
+	"title": "Unit Test",
+	"shared": {
+		"timeout": 1000,
+		"header": {
+			"Accept": "applicstion/json"
+		}
+	},
+
+	"tasks": [
+		{
+			"id": "badurl",
+			"disabled": false,
+			"title": "Random User",
+			"method": "GET",
+			"url": "https://unknown-url",
+			"assert": {
+				"response": 200,
+				"type": "application/json",
+				"schema": "object"
+			}
+		}
+	]
+}

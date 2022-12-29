@@ -9,11 +9,12 @@ A simple command-line tool for automated testing of RESTfull APIs
 
 ### History of changes:
 
-**Dec, 2022: Release 1.2.06**
+**Dec, 2022: Release 1.2.07**
 
 * No longer need to create files for default schemas `object` and `array`.
 * No need to create a runbook if you run one script. Can specify the script name in the command.
 * Option to create request body inside task. Do not have to create file for request body.
+* Upgrade RestSharp and updated unit tests
 
 **Jul, 2022: Release 1.2**
 

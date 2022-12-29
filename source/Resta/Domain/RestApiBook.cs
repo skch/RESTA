@@ -33,6 +33,7 @@ namespace Resta.Domain
 			foreach (var scriptData in book.scripts)
 			{
 				bool success = tcase.Execute(context, book.environment, scriptData);
+				
 				if (!success & opt.failFast) break;
 			}
 

@@ -1,0 +1,37 @@
+{
+	"id": "test",
+	"title": "Unit Test",
+	"shared": {
+		"timeout": 1000,
+		"header": {
+			"Accept": "applicstion/json"
+		}
+	},
+
+	"tasks": [
+		{
+			"id": "user",
+			"disabled": false,
+			"title": "Random User",
+			"method": "GET",
+			"url": "https://randomuser.me/api/",
+			"assert": {
+				"response": 200,
+				"type": "application/json",
+				"schema": "object"
+			}
+		},
+		{
+			"id": "population",
+			"disabled": false,
+			"title": "USA Population",
+			"method": "GET",
+			"url": "https://datausa.io/api/data?drilldowns=Nation&measures=Population",
+			"assert": {
+				"response": 200,
+				"type": "application/json",
+				"schema": "object"
+			}
+		}
+	]
+}
