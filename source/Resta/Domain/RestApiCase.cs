@@ -115,7 +115,8 @@ namespace Resta.Domain
 			try
 			{
 				var options = new RestClientOptions {
-				  BaseUrl = new Uri(task.basepath),
+				  BaseUrl = new Uri(task.basepath), 
+				  ThrowOnAnyError = false,
 					RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
 				};
 				if (task.x509 != null)
@@ -247,10 +248,6 @@ namespace Resta.Domain
 				RestResponse? response = client.Execute(request);
 				var fd = DateTime.Now - start;
 				res.duration = (long)fd.TotalMilliseconds;
-				if (response.ErrorException != null)
-				{
-					res.warnings.Add(response.ErrorException.Message);
-				}
 				return response;
 			} catch (Exception ex)
 			{
@@ -499,6 +496,11 @@ namespace Resta.Domain
 			if (response == null) return context.SetError(false, "readResponseContent:Missing response");
 			res.htmlcode = (int)response.StatusCode;
 			res.raw = response.Content; // raw content as string
+			
+			if (response.ErrorException != null && res.htmlcode == 0)
+			{
+				res.raw = JsonConvert.SerializeObject(new WrapException(response.ErrorException));
+			}
 			return true;
 		}
 		

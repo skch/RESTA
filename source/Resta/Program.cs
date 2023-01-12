@@ -13,7 +13,7 @@ namespace Resta
 	static class Program
 	{
 	
-		static string AppVersion = "1.2.07";
+		static string AppVersion = "1.2.08";
 		static void Main(string[] args)
 		{
 			FluentConsole
@@ -122,6 +122,7 @@ namespace Resta
 			Console.WriteLine(" -in:{path}    Define Path for input data");
 			Console.WriteLine(" -out:{path}   Define Path to output the results");
 			Console.WriteLine(" -sc:{path}    Define Path for schemas");
+			Console.WriteLine(" -env:{name}   Set environment name");
 			Console.WriteLine(" -script       Run one script instead of runbook");
 			Console.WriteLine(" -keep         Save the result even when passed the test");
 			Console.WriteLine(" -rh           Include response header");
