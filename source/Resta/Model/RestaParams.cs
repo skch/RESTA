@@ -22,5 +22,6 @@ namespace Resta.Model
 		public bool failFast = false;
 		public bool isScript = false;
 		public bool createNewBook = false;
+		public bool hideVariables = false;
 	}
 }

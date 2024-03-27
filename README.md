@@ -9,6 +9,12 @@ A simple command-line tool for automated testing of RESTfull APIs
 
 ### History of changes:
 
+**Mar, 2024: Release 1.2.09**
+
+* Upgrade to .NET 8 Framework
+* Added test summary report.
+* Option to hide report about variables assignment during execution. Command switch `-private`.
+
 **Dec, 2022: Release 1.2.07**
 
 * No longer need to create files for default schemas `object` and `array`.

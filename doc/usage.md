@@ -27,6 +27,8 @@ resta {runbook} -out:{output-dir} -sc:{schema-dir} -in:{data-dir} [options]
 
 `-ff` To stop execution after first error (fail fast)
 
+`-private` To hide variables assigned during execution
+
 
 
 **EXAMPLE**:

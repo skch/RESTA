@@ -26,6 +26,7 @@ namespace Resta.Domain
 		public bool includeResponseHeader = false;
 		public bool failFast = false;
 		public bool RemoveRaw = true;
+		public bool ToShowVariables = true;
 		
 		public RestApiCase()
 		{
@@ -34,13 +35,15 @@ namespace Resta.Domain
 		
 		
 		//===========================================================
-		public bool Execute(ProcessContext context, RestEnvironment env, RestScript script)
+		public TestResults Execute(ProcessContext context, RestEnvironment env, RestScript script)
 		{
-			if (context.HasErrors) return false;
+			var empty = new TestResults(false, 0, 0);
+			if (context.HasErrors) return empty;
 			var scriptTitle = (string.IsNullOrEmpty(script.title)) ? script.id : script.title;
 
 			Console.WriteLine("Script {0} in {1}", scriptTitle, env.title);
-			bool totalSuccess = true;
+			int countFailed = 0;
+			int countPassed = 0;
 			foreach (var task in script.tasks)
 			{
 				deleteOldReportFile(context, "api-"+script.id + "-"+task.id+".json");
@@ -50,11 +53,11 @@ namespace Resta.Domain
 				if (!success & failFast)
 				{
 					verbose("Terminating script because of failure");
-					return false;
+					return new TestResults(false, 1, countPassed);
 				}
-				if (!success) totalSuccess = false;
+				if (success) countPassed++; else countFailed++;
 			}
-			return totalSuccess;
+			return new TestResults(countFailed == 0, countFailed, countPassed);
 		}
 
 
@@ -621,7 +624,7 @@ namespace Resta.Domain
 					var element = locateByPath(context, token, read.locate);
 					if (string.IsNullOrEmpty(element)) element = "~";
 					env.SetValue(read.target, element);
-					Console.Write(", {0}={1} ", read.target, element);
+					if (ToShowVariables) Console.Write(", {0}={1} ", read.target, element);
 				}
 				return true;
 

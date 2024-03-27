@@ -13,7 +13,7 @@ namespace Resta
 	static class Program
 	{
 	
-		static string AppVersion = "1.2.08";
+		static string AppVersion = "1.2.09";
 		static void Main(string[] args)
 		{
 			FluentConsole
@@ -87,6 +87,7 @@ namespace Resta
 						case "debug": res.verbose = true; break;
 						case "rh": res.responseHeader = true; break;
 						case "ff": res.failFast = true; break;
+						case "private": res.hideVariables = true; break;
 						case "new": res.createNewBook = true; break;
 						default: res.needHelp = true; break;
 					}
@@ -127,6 +128,7 @@ namespace Resta
 			Console.WriteLine(" -keep         Save the result even when passed the test");
 			Console.WriteLine(" -rh           Include response header");
 			Console.WriteLine(" -ff           Stop script execution after first error");
+			Console.WriteLine(" -private      Hide variables assigned during execution");
 			
 		}
 	}
