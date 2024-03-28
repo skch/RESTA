@@ -74,7 +74,7 @@ namespace Resta.Domain
 		{
 			if (context.HasErrors) return false;
 			Console.WriteLine();
-			Console.WriteLine($"SUMMARY: {book.scripts.Count} tests, {countSteps} steps, {countPassed} passed, {countFailed} failed.");
+			Console.WriteLine($"SUMMARY: Tests: {book.scripts.Count}, total steps: {countSteps}, passed: {countPassed}, failed: {countFailed}.");
 			return true;
 		}
 		
