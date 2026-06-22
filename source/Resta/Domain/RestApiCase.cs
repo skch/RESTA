@@ -220,9 +220,9 @@ namespace Resta.Domain
 				
 				if (task.content!=null) jbody = readContent(res, env, request, task.content);
 				if (!string.IsNullOrEmpty(jbody)) res.input = addRequestBody(res, env, request, ext, jbody);
-				request.Timeout = 5000;
-				if (script.shared?.timeout != null) request.Timeout = (int)script.shared.timeout;
-				if (task.timeout != 0) request.Timeout = (int)task.timeout;
+				request.Timeout = TimeSpan.FromMilliseconds(5000);
+				if (script.shared?.timeout != null) request.Timeout = TimeSpan.FromMilliseconds(script.shared.timeout);
+				if (task.timeout != 0) request.Timeout = TimeSpan.FromMilliseconds(task.timeout);
 				
 				ServicePointManager.Expect100Continue = true;
 				ServicePointManager.DefaultConnectionLimit = 9999;
