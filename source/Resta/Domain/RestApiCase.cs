@@ -471,9 +471,9 @@ namespace Resta.Domain
 					{
 						rheader.Add(rh.Name, rh.Value);
 					}
-					switch (rh.Name)
+					switch (rh.Name.ToLower())
 					{
-						case "Content-Type":
+						case "content-type":
 							if (rh.Value != null)
 							{
 								var parts = rh.Value.ToString()?.Split(';');
@@ -511,7 +511,7 @@ namespace Resta.Domain
 		private bool parseResponseContent(ProcessContext context, ApiCallReport res)
 		{
 			if (context.HasErrors) return false;
-			if (res.type != "application/json") return true;
+			if (res.type.ToLower() != "application/json") return true;
 			try
 			{
 				res.response = (res.raw == null) ? "": JsonConvert.DeserializeObject(res.raw);
