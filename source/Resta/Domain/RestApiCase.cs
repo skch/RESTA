@@ -483,6 +483,11 @@ namespace Resta.Domain
 					}
 				}
 				if (includeResponseHeader) res.responseHeader = rheader;
+				if (response.ContentType != null && response.ContentType.ToLower() != "application/json")
+				{
+					var parts = response.ContentType.Split(';');
+					res.type = parts?[0].Trim();
+				}
 				return true;
 			} catch (Exception ex)
 			{
